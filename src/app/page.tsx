@@ -141,8 +141,8 @@ export default function Home() {
                 </span>
             </header>
 
-            <main className="flex flex-col text-center gap-[12px] my-[20px] min-h-[500px] w-full items-stretch rounded-xl">
-                <div className={`text-center text-[36px] font-bold`}>Which tag has more posts?</div>
+            <div className={`text-center text-[36px] font-bold py-[20px]`}>Which tag has more posts?</div>
+            <main className="flex flex-col text-center gap-[12px] min-h-[500px] w-full items-stretch rounded-xl">
                 <div
                     className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl animate-fade-in-up`}
                 >
@@ -153,7 +153,7 @@ export default function Home() {
                         choice="lower"
                         getCategoryName={getCategoryName}
                     />
-                    <div className="text-3xl font-bold my-auto px-[10px]">or</div>
+                    <div className="text-3xl font-bold my-auto px-[30px]">or</div>
                     <TagDisplay
                         tag={rightTag}
                         isRevealed={isRevealed}
