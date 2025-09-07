@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Tag } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
+import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (tags.length === 0) return null;
@@ -30,7 +31,7 @@ export default function Home() {
                 setLeftTag(newLeftTag);
                 setRightTag(newRightTag);
                 if (newLeftTag) {
-                    setAnimatedCount(newLeftTag.count);
+                    setAnimatedCount(0);
                 }
             })
             .catch((error) => console.error("Failed to fetch tags:", error));
@@ -40,14 +41,15 @@ export default function Home() {
         if (isRevealed && leftTag && rightTag) {
             const start = 0;
             const end = rightTag.count;
-            const duration = 1000;
             const range = end - start;
             let startTime: number | null = null;
 
             const animate = (currentTime: number) => {
                 if (!startTime) startTime = currentTime;
                 const elapsedTime = currentTime - startTime;
-                const progress = Math.min(elapsedTime / duration, 1);
+                let progress = Math.min(elapsedTime / INCREMENT_ANIM_MS, 1);
+                // Apply ease-out cubic easing function
+                progress = 1 - Math.pow(1 - progress, 3);
                 const currentCount = Math.floor(start + range * progress);
                 setAnimatedCount(currentCount);
 
@@ -78,10 +80,10 @@ export default function Home() {
                 const newRightTag = getRandomTag(allTags);
                 setRightTag(newRightTag);
                 if (rightTag) {
-                    setAnimatedCount(rightTag.count);
+                    setAnimatedCount(0);
                 }
                 setIsRevealed(false);
-            }, 4000);
+            }, SHOW_ANSWER_TIME_MS);
         } else {
             setCurrentStreak(0);
             setTimeout(() => {
@@ -90,10 +92,10 @@ export default function Home() {
                 setLeftTag(newLeftTag);
                 setRightTag(newRightTag);
                 if (newLeftTag) {
-                    setAnimatedCount(newLeftTag.count);
+                    setAnimatedCount(0);
                 }
                 setIsRevealed(false);
-            }, 3500);
+            }, SHOW_ANSWER_TIME_MS);
         }
 
         setIsRevealed(true);

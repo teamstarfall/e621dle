@@ -1,3 +1,4 @@
+import { OPACITY_ANIM_MS } from "../constants";
 import { Tag } from "../interfaces";
 
 interface TagDisplayProps {
@@ -49,7 +50,7 @@ export default function TagDisplay({
                 </span>
                 <span
                     className={`text-[42px] font-bold leading-none ${
-                        choice === "higher" ? "transition-opacity duration-500" : ""
+                        choice === "higher" ? `transition-opacity duration-${OPACITY_ANIM_MS}` : ""
                     } ${
                         choice === "lower"
                             ? "opacity-100"
