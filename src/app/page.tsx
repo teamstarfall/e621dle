@@ -18,29 +18,54 @@ export default function Home() {
     const [isRevealed, setIsRevealed] = useState(false);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
-    const [choice, setChoice] = useState<"higher" | "lower" | null>(null);
-    const [isCorrect, setIsCorrect] = useState(false);
+    const [animatedCount, setAnimatedCount] = useState(0);
 
     useEffect(() => {
         fetch("/api/numbers")
             .then((res) => res.json())
             .then((tags: Tag[]) => {
                 setAllTags(tags);
-                setLeftTag(getRandomTag(tags));
-                setRightTag(getRandomTag(tags));
+                const newLeftTag = getRandomTag(tags);
+                const newRightTag = getRandomTag(tags);
+                setLeftTag(newLeftTag);
+                setRightTag(newRightTag);
+                if (newLeftTag) {
+                    setAnimatedCount(newLeftTag.count);
+                }
             })
             .catch((error) => console.error("Failed to fetch tags:", error));
     }, []);
 
+    useEffect(() => {
+        if (isRevealed && leftTag && rightTag) {
+            const start = 0;
+            const end = rightTag.count;
+            const duration = 1000;
+            const range = end - start;
+            let startTime: number | null = null;
+
+            const animate = (currentTime: number) => {
+                if (!startTime) startTime = currentTime;
+                const elapsedTime = currentTime - startTime;
+                const progress = Math.min(elapsedTime / duration, 1);
+                const currentCount = Math.floor(start + range * progress);
+                setAnimatedCount(currentCount);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            requestAnimationFrame(animate);
+        }
+    }, [isRevealed, leftTag, rightTag]);
+
     const handleChoice = (selectedChoice: "higher" | "lower") => {
         if (isRevealed || !leftTag || !rightTag) return;
 
-        setChoice(selectedChoice);
-
-        const correctChoice = rightTag.count >= leftTag.count ? "higher" : "lower";
-        const wasCorrect = selectedChoice === correctChoice;
-
-        setIsCorrect(wasCorrect);
+        const wasCorrect =
+            (selectedChoice === "higher" && rightTag.count >= leftTag.count) ||
+            (selectedChoice === "lower" && rightTag.count <= leftTag.count);
 
         if (wasCorrect) {
             setCurrentStreak((prev) => prev + 1);
@@ -50,35 +75,28 @@ export default function Home() {
 
             setTimeout(() => {
                 setLeftTag(rightTag);
-                setRightTag(getRandomTag(allTags));
+                const newRightTag = getRandomTag(allTags);
+                setRightTag(newRightTag);
+                if (rightTag) {
+                    setAnimatedCount(rightTag.count);
+                }
                 setIsRevealed(false);
-                setChoice(null);
-                setIsCorrect(false);
             }, 4000);
         } else {
             setCurrentStreak(0);
-            // After a delay, get two new tags
             setTimeout(() => {
-                setLeftTag(getRandomTag(allTags));
-                setRightTag(getRandomTag(allTags));
+                const newLeftTag = getRandomTag(allTags);
+                const newRightTag = getRandomTag(allTags);
+                setLeftTag(newLeftTag);
+                setRightTag(newRightTag);
+                if (newLeftTag) {
+                    setAnimatedCount(newLeftTag.count);
+                }
                 setIsRevealed(false);
-                setChoice(null);
-            }, 2000);
+            }, 3500);
         }
 
         setIsRevealed(true);
-    };
-
-    const getBorderColor = (buttonChoice: "higher" | "lower") => {
-        if (!isRevealed || !leftTag || !rightTag) return "border-gray-600 border-[1px]";
-        const correctChoice = rightTag.count >= leftTag.count ? "higher" : "lower";
-        const isButtonCorrect = buttonChoice === correctChoice;
-
-        if (choice === buttonChoice) {
-            return isButtonCorrect ? "border-green-500 border-1" : "border-red-500 border-1";
-        } else {
-            return isButtonCorrect ? "border-red-500 border-1" : "border-green-500 border-1";
-        }
     };
 
     if (!leftTag || !rightTag) {
@@ -122,33 +140,17 @@ export default function Home() {
                     <span className="p-2 border-1 rounded-xl">Best Streak: {bestStreak}</span>
                 </span>
             </header>
-            <div
-                className={`my-[20px] text-center text-[36px] font-bold ${
-                    isCorrect === false && isRevealed
-                        ? "text-red-500 drop-shadow-2xl animate-wiggle"
-                        : isCorrect
-                        ? "text-green-500 drop-shadow-2xl animate-bounce"
-                        : ""
-                }`}
-            >
-                {isCorrect === false && isRevealed
-                    ? "Incorrect!"
-                    : isCorrect
-                    ? "Correct!"
-                    : "Which tag has more posts?"}
-            </div>
+
             <main className="flex flex-col text-center gap-[12px] my-[20px] min-h-[500px] w-full items-stretch rounded-xl">
+                <div className={`text-center text-[36px] font-bold`}>Which tag has more posts?</div>
                 <div
-                    className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl ${
-                        isCorrect ? "animate-shake" : "animate-fade-in-up"
-                    }`}
+                    className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl animate-fade-in-up`}
                 >
                     <TagDisplay
                         tag={leftTag}
                         isRevealed={isRevealed}
                         handleChoice={handleChoice}
                         choice="lower"
-                        getBorderColor={getBorderColor}
                         getCategoryName={getCategoryName}
                     />
                     <div className="text-3xl font-bold my-auto px-[10px]">or</div>
@@ -157,13 +159,13 @@ export default function Home() {
                         isRevealed={isRevealed}
                         handleChoice={handleChoice}
                         choice="higher"
-                        getBorderColor={getBorderColor}
                         getCategoryName={getCategoryName}
+                        animatedCount={animatedCount}
                     />
                 </div>
             </main>
             <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#4a5568ab] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
-                <span>Created by Team Starfall</span>
+                <span>Created by Team Starfall (angelolz/azuretst)</span>
                 <span>
                     Inspired by{" "}
                     <a className="underline" href="https://rule34dle.vercel.app/">
