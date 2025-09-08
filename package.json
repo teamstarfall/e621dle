@@ -2,13 +2,16 @@
   "name": "e621dle",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-tags": "node scripts/generate-tags.js"
   },
   "dependencies": {
+    "csv-parse": "^6.1.0",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0"
