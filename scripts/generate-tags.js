@@ -241,8 +241,13 @@ async function parsePosts(topTags) {
 function saveTagsAsJson(topTags) {
     const outputPath = path.join(__dirname, "../resources/tags.json");
 
+    const outputData = {
+        date: getYesterdayDate(),
+        tags: topTags,
+    };
+
     try {
-        fs.writeFileSync(outputPath, JSON.stringify(topTags, null, 2), "utf-8");
+        fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), "utf-8");
         console.log(`Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
         console.error("Failed to save tags as JSON:", err);
