@@ -1,5 +1,5 @@
-import { OPACITY_ANIM_MS } from "../constants";
 import { Tag } from "../interfaces";
+import ImageCard from "./ImageCard";
 
 interface TagDisplayProps {
     tag: Tag | null;
@@ -45,22 +45,10 @@ export default function TagDisplay({
             </span>
 
             <div className="flex flex-col mb-[0px]">
-                <span className="min-h-[100px] max-h-[250px] h-[500px] my-[12px] bg-gray-500 rounded-md flex items-center justify-center italic">
-                    image coming soon :)
+                <span className="relative h-[300px] my-[12px] rounded-md overflow-hidden">
+                    <ImageCard tag={tag} />
                 </span>
-                <span
-                    className={`text-[42px] font-bold leading-none ${
-                        choice === "higher" ? `transition-opacity duration-${OPACITY_ANIM_MS}` : ""
-                    } ${
-                        choice === "lower"
-                            ? "opacity-100"
-                            : isRevealed && choice === "higher"
-                            ? "opacity-100"
-                            : "opacity-50"
-                    }`}
-                >
-                    {displayCount()}
-                </span>
+                <span className="text-[42px] font-bold leading-none">{displayCount()}</span>
                 <span>posts</span>
             </div>
         </div>

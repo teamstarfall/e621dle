@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Tag } from "./interfaces";
+import { Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
 import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
 
@@ -12,7 +12,7 @@ function getRandomTag(tags: Tag[]): Tag | null {
 
 export default function Home() {
     const [allTags, setAllTags] = useState<Tag[]>([]);
-
+    const [date, setDate] = useState<string | null>(null);
     const [leftTag, setLeftTag] = useState<Tag | null>(null);
     const [rightTag, setRightTag] = useState<Tag | null>(null);
 
@@ -22,14 +22,21 @@ export default function Home() {
     const [animatedCount, setAnimatedCount] = useState(0);
 
     useEffect(() => {
-        fetch("/api/numbers")
+        fetch("/api/posts")
             .then((res) => res.json())
-            .then((tags: Tag[]) => {
-                setAllTags(tags);
-                const newLeftTag = getRandomTag(tags);
-                const newRightTag = getRandomTag(tags);
+            .then((tagsResponse: TagResponse) => {
+                setDate(tagsResponse.date);
+                setAllTags(tagsResponse.tags);
+                const newLeftTag = getRandomTag(tagsResponse.tags);
+                let newRightTag = getRandomTag(tagsResponse.tags);
+
+                while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+                    newRightTag = getRandomTag(tagsResponse.tags);
+                }
+
                 setLeftTag(newLeftTag);
                 setRightTag(newRightTag);
+
                 if (newLeftTag) {
                     setAnimatedCount(0);
                 }
@@ -48,7 +55,6 @@ export default function Home() {
                 if (!startTime) startTime = currentTime;
                 const elapsedTime = currentTime - startTime;
                 let progress = Math.min(elapsedTime / INCREMENT_ANIM_MS, 1);
-                // Apply ease-out cubic easing function
                 progress = 1 - Math.pow(1 - progress, 3);
                 const currentCount = Math.floor(start + range * progress);
                 setAnimatedCount(currentCount);
@@ -70,12 +76,12 @@ export default function Home() {
             (selectedChoice === "lower" && rightTag.count <= leftTag.count);
 
         if (wasCorrect) {
-            setCurrentStreak((prev) => prev + 1);
-            if (currentStreak + 1 > bestStreak) {
-                setBestStreak(currentStreak + 1);
-            }
-
             setTimeout(() => {
+                setCurrentStreak((prev) => prev + 1);
+                if (currentStreak + 1 > bestStreak) {
+                    setBestStreak(currentStreak + 1);
+                }
+
                 setLeftTag(rightTag);
                 const newRightTag = getRandomTag(allTags);
                 setRightTag(newRightTag);
@@ -85,8 +91,8 @@ export default function Home() {
                 setIsRevealed(false);
             }, SHOW_ANSWER_TIME_MS);
         } else {
-            setCurrentStreak(0);
             setTimeout(() => {
+                setCurrentStreak(0);
                 const newLeftTag = getRandomTag(allTags);
                 const newRightTag = getRandomTag(allTags);
                 setLeftTag(newLeftTag);
@@ -100,10 +106,6 @@ export default function Home() {
 
         setIsRevealed(true);
     };
-
-    if (!leftTag || !rightTag) {
-        return <div className="flex items-center justify-center min-h-screen">Loading tags...</div>;
-    }
 
     const getCategoryName = (category: number) => {
         switch (category) {
@@ -144,26 +146,32 @@ export default function Home() {
             </header>
 
             <div className={`text-center text-[36px] font-bold py-[20px]`}>Which tag has more posts?</div>
-            <main className="flex flex-col text-center gap-[12px] min-h-[500px] w-full items-stretch rounded-xl">
+            <main className="flex flex-col text-center gap-[12px] min-h-[550px] w-full items-stretch rounded-xl">
                 <div
                     className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl animate-fade-in-up`}
                 >
-                    <TagDisplay
-                        tag={leftTag}
-                        isRevealed={isRevealed}
-                        handleChoice={handleChoice}
-                        choice="lower"
-                        getCategoryName={getCategoryName}
-                    />
-                    <div className="text-3xl font-bold my-auto px-[30px]">or</div>
-                    <TagDisplay
-                        tag={rightTag}
-                        isRevealed={isRevealed}
-                        handleChoice={handleChoice}
-                        choice="higher"
-                        getCategoryName={getCategoryName}
-                        animatedCount={animatedCount}
-                    />
+                    {!leftTag || !rightTag ? (
+                        <div className="flex items-center justify-center min-h-screen">Loading tags...</div>
+                    ) : (
+                        <>
+                            <TagDisplay
+                                tag={leftTag}
+                                isRevealed={isRevealed}
+                                handleChoice={handleChoice}
+                                choice="lower"
+                                getCategoryName={getCategoryName}
+                            />
+                            <div className="text-3xl font-bold my-auto px-[30px]">or</div>
+                            <TagDisplay
+                                tag={rightTag}
+                                isRevealed={isRevealed}
+                                handleChoice={handleChoice}
+                                choice="higher"
+                                getCategoryName={getCategoryName}
+                                animatedCount={animatedCount}
+                            />
+                        </>
+                    )}
                 </div>
             </main>
             <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#4a5568ab] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
@@ -174,6 +182,7 @@ export default function Home() {
                         Rule34dle
                     </a>
                 </span>
+                {date && <span>Data is based on {date}.</span>}
             </footer>
         </div>
     );
