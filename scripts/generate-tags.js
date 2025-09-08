@@ -190,6 +190,7 @@ async function parseAliases(tags) {
 async function parsePosts(topTags) {
     const topTagsMap = new Map(topTags.map((t) => [t.name, t]));
     const targetTagsSet = new Set(topTagsMap.keys());
+    const usedImages = new Map();
 
     return new Promise((resolve, reject) => {
         const parser = parse({ skip_empty_lines: true });
@@ -221,16 +222,35 @@ async function parsePosts(topTags) {
                 // Only consider PNG/JPG
                 if (!["png", "jpg"].includes(fileExt)) return;
 
-                const url = createImageUrl(md5, fileExt);
+                const url = createImageUrl(md5);
 
                 // Split tags once, loop through
                 const postTags = line[8].split(/\s+/);
                 for (let i = 0; i < postTags.length; i++) {
                     const tagName = postTags[i];
                     if (!targetTagsSet.has(tagName)) continue;
+
                     const tag = topTagsMap.get(tagName);
-                    if (tag.category === 4 && !postTags.includes("solo")) continue;
-                    if (tag) tag.updatePreview(rating, score, url);
+                    if ([4, 5].includes(tag.category) && !postTags.includes("solo")) continue;
+                    if (!tag) continue;
+
+                    const ratingMap = { e: "explicit", q: "questionable", s: "safe" };
+                    const ratingKey = ratingMap[rating.toLowerCase()];
+                    if (!ratingKey) continue;
+
+                    if (tag.images[ratingKey].score > score) continue;
+
+                    const existingImage = usedImages.get(url);
+                    if (existingImage && existingImage.tag.name !== tag.name) {
+                        if (score > existingImage.score) {
+                            existingImage.tag.resetPreview(existingImage.ratingKey);
+                            tag.updatePreview(rating, score, url);
+                            usedImages.set(url, { tag, score, ratingKey });
+                        }
+                    } else {
+                        tag.updatePreview(rating, score, url);
+                        usedImages.set(url, { tag, score, ratingKey });
+                    }
                 }
             })
             .on("end", () => resolve())
@@ -308,5 +328,9 @@ class Tag {
         if (this.images[ratingKey].score === null || score > this.images[ratingKey].score) {
             this.images[ratingKey] = { url, score };
         }
+    }
+
+    resetPreview(ratingKey) {
+        this.images[ratingKey] = { url: null, score: -Infinity };
     }
 }

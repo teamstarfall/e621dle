@@ -26,42 +26,40 @@ export default function Home() {
         questionable: false,
         safe: true
     };
-    const [selectedRatings, setSelectedRatings] = useState<Ratings>(() => {
-        const stored = localStorage.getItem("selectedRatings");
-        return stored ? (JSON.parse(stored) as Ratings) : defaultRatings;
-    })
+    const [selectedRatings, setSelectedRatings] = useState<Ratings>(defaultRatings)
 
-    // Whenever ratings change, save to localStorage fix later
+    useEffect(() => {
+        //get options
+        
+        setSelectedRatings(JSON.parse(localStorage.getItem("selectedRatings") ?? ""));
+
+        //load posts
+        fetch("/api/posts")
+        .then((res) => res.json())
+        .then((tagsResponse: TagResponse) => {
+            setDate(tagsResponse.date);
+            setAllTags(tagsResponse.tags);
+            const newLeftTag = getRandomTag(tagsResponse.tags);
+            let newRightTag = getRandomTag(tagsResponse.tags);
+            
+            while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+                newRightTag = getRandomTag(tagsResponse.tags);
+            }
+            
+            setLeftTag(newLeftTag);
+            setRightTag(newRightTag);
+            
+            if (newLeftTag) {
+                setAnimatedCount(0);
+            }
+        })
+        .catch((error) => console.error("Failed to fetch tags:", error));
+        
+    }, []);
+
     useEffect(() => {
         localStorage.setItem("selectedRatings", JSON.stringify(selectedRatings));
-    }, [selectedRatings]);
-    
-    function usePersistentSettings() {
-        return [selectedRatings, setSelectedRatings] as const;
-    }
-
-    useEffect(() => {
-        fetch("/api/posts")
-            .then((res) => res.json())
-            .then((tagsResponse: TagResponse) => {
-                setDate(tagsResponse.date);
-                setAllTags(tagsResponse.tags);
-                const newLeftTag = getRandomTag(tagsResponse.tags);
-                let newRightTag = getRandomTag(tagsResponse.tags);
-
-                while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-                    newRightTag = getRandomTag(tagsResponse.tags);
-                }
-
-                setLeftTag(newLeftTag);
-                setRightTag(newRightTag);
-
-                if (newLeftTag) {
-                    setAnimatedCount(0);
-                }
-            })
-            .catch((error) => console.error("Failed to fetch tags:", error));
-    }, []);
+    }, [selectedRatings])
 
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
