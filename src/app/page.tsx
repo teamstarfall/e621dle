@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Tag, TagResponse } from "./interfaces";
+import { Ratings, Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
 import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
 
@@ -20,6 +20,25 @@ export default function Home() {
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
+
+    const defaultRatings: Ratings = {
+        explicit: false,
+        questionable: false,
+        safe: true
+    };
+    const [selectedRatings, setSelectedRatings] = useState<Ratings>(() => {
+        const stored = localStorage.getItem("selectedRatings");
+        return stored ? (JSON.parse(stored) as Ratings) : defaultRatings;
+    })
+
+    // Whenever ratings change, save to localStorage fix later
+    useEffect(() => {
+        localStorage.setItem("selectedRatings", JSON.stringify(selectedRatings));
+    }, [selectedRatings]);
+    
+    function usePersistentSettings() {
+        return [selectedRatings, setSelectedRatings] as const;
+    }
 
     useEffect(() => {
         fetch("/api/posts")
@@ -107,6 +126,13 @@ export default function Home() {
         setIsRevealed(true);
     };
 
+    const handleRatingChange = (rating: keyof typeof selectedRatings) => {
+        setSelectedRatings(prev => ({
+            ...prev,
+            [rating]: !prev[rating],
+        }))
+    }
+
     const getCategoryName = (category: number) => {
         switch (category) {
             case 0:
@@ -160,6 +186,7 @@ export default function Home() {
                                 handleChoice={handleChoice}
                                 choice="lower"
                                 getCategoryName={getCategoryName}
+                                ratings={selectedRatings}
                             />
                             <div className="text-3xl font-bold my-auto px-[30px]">or</div>
                             <TagDisplay
@@ -169,12 +196,40 @@ export default function Home() {
                                 choice="higher"
                                 getCategoryName={getCategoryName}
                                 animatedCount={animatedCount}
+                                ratings={selectedRatings}
                             />
                         </>
                     )}
                 </div>
             </main>
             <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#4a5568ab] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
+                <span className="flex gap-2">
+                    <a>Include Posts: </a>
+                    <label className="flex gap-1">
+                        <input 
+                            type="checkbox"
+                            checked={selectedRatings.explicit}
+                            onChange={() => handleRatingChange("explicit")}
+                        />
+                        Explicit
+                    </label>
+                    <label className="flex gap-1">
+                        <input 
+                            type="checkbox"
+                            checked={selectedRatings.questionable}
+                            onChange={() => handleRatingChange("questionable")}
+                        />
+                        Questionable
+                    </label>
+                    <label className="flex gap-1">
+                        <input 
+                            type="checkbox"
+                            checked={selectedRatings.safe}
+                            onChange={() => handleRatingChange("safe")}
+                        />
+                        Safe
+                    </label>
+                </span>
                 <span>Created by Team Starfall (angelolz/azuretst)</span>
                 <span>
                     Inspired by{" "}
@@ -187,3 +242,5 @@ export default function Home() {
         </div>
     );
 }
+
+

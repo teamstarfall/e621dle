@@ -2,12 +2,14 @@
 
 import { memo, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Tag } from "../interfaces";
+import { Ratings, Tag } from "../interfaces";
 
-const ImageCard = memo(function ImageCard({ tag }: { tag: Tag }) {
+const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag, selectedRatings: Ratings }) {
     const sources = useMemo(() => {
         const potential = [];
-        const ratings: (keyof Tag["images"])[] = ["safe", "questionable"];
+        const ratings: (keyof Ratings)[] = Object.keys(selectedRatings).filter(
+            (key) => selectedRatings[key as keyof Ratings]
+          ) as (keyof Ratings)[];
 
         for (const rating of ratings) {
             const url = tag.images[rating]?.url;
@@ -23,7 +25,7 @@ const ImageCard = memo(function ImageCard({ tag }: { tag: Tag }) {
 
     useEffect(() => {
         setSourceIndex(0);
-    }, [tag]);
+    }, [tag, selectedRatings]);
 
     const handleError = () => {
         if (sourceIndex + 1 < sources.length) {
