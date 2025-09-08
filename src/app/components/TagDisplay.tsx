@@ -10,6 +10,18 @@ interface TagDisplayProps {
     animatedCount?: number;
 }
 
+function AnimatedNumber({ isRevealed, animatedCount, tagCount }: { isRevealed: boolean; animatedCount?: number; tagCount: number }) {
+    const displayCount = () => {
+        if (!isRevealed) {
+            return "?";
+        }
+        // If the animation is running, show the animated count, otherwise show the final tag count.
+        return (animatedCount !== undefined ? animatedCount : tagCount).toLocaleString();
+    };
+
+    return <span className="text-[42px] font-bold leading-none">{displayCount()}</span>;
+}
+
 export default function TagDisplay({
     tag,
     isRevealed,
@@ -21,16 +33,6 @@ export default function TagDisplay({
     if (!tag) {
         return null;
     }
-
-    const displayCount = () => {
-        if (choice === "lower") {
-            return tag.count.toLocaleString();
-        }
-        if (isRevealed) {
-            return animatedCount?.toLocaleString() ?? "?";
-        }
-        return "?";
-    };
 
     return (
         <div
@@ -48,7 +50,11 @@ export default function TagDisplay({
                 <span className="relative h-[300px] my-[12px] rounded-md overflow-hidden">
                     <ImageCard tag={tag} />
                 </span>
-                <span className="text-[42px] font-bold leading-none">{displayCount()}</span>
+                {choice === 'lower' ? (
+                    <span className="text-[42px] font-bold leading-none">{tag.count.toLocaleString()}</span>
+                ) : (
+                    <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
+                )}
                 <span>posts</span>
             </div>
         </div>
