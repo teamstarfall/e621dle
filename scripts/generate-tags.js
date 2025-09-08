@@ -228,8 +228,8 @@ async function parsePosts(topTags) {
                 for (let i = 0; i < postTags.length; i++) {
                     const tagName = postTags[i];
                     if (!targetTagsSet.has(tagName)) continue;
-
                     const tag = topTagsMap.get(tagName);
+                    if (tag.category === 4 && !postTags.includes("solo")) continue;
                     if (tag) tag.updatePreview(rating, score, url);
                 }
             })
