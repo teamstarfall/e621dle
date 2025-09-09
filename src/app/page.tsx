@@ -18,6 +18,7 @@ export default function Home() {
     const [rightTag, setRightTag] = useState<Tag | null>(null);
 
     const [isRevealed, setIsRevealed] = useState(false);
+    const [isGameOver, setIsGameOver] = useState(false);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
@@ -111,19 +112,27 @@ export default function Home() {
             }, SHOW_ANSWER_TIME_MS);
         } else {
             setTimeout(() => {
-                setCurrentStreak(0);
-                const newLeftTag = getRandomTag(allTags);
-                const newRightTag = getRandomTag(allTags);
-                setLeftTag(newLeftTag);
-                setRightTag(newRightTag);
-                if (newLeftTag) {
-                    setAnimatedCount(0);
-                }
-                setIsRevealed(false);
+                setIsGameOver(true);
             }, SHOW_ANSWER_TIME_MS);
         }
 
         setIsRevealed(true);
+    };
+
+    const handleTryAgain = () => {
+        setIsGameOver(false);
+        setCurrentStreak(0);
+        const newLeftTag = getRandomTag(allTags);
+        let newRightTag = getRandomTag(allTags);
+        while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+            newRightTag = getRandomTag(allTags);
+        }
+        setLeftTag(newLeftTag);
+        setRightTag(newRightTag);
+        if (newLeftTag) {
+            setAnimatedCount(0);
+        }
+        setIsRevealed(false);
     };
 
     const handleRatingChange = (rating: keyof typeof selectedRatings) => {
@@ -163,15 +172,29 @@ export default function Home() {
             id="container"
             className="font-sans items-center justify-items-center min-h-screen h-full max-w-[1200px] mx-auto w-screen p-8 pb-20"
         >
-            <header className="flex flex-col gap-[16px] justify-center text-center border-1 rounded-xl p-[16px] w-full bg-[#4a5568ab] shadow-xl">
+            <header className="flex flex-col gap-[16px] justify-center text-center border-1 rounded-xl p-[16px] w-full bg-[#1f3c67] shadow-xl">
                 <Image src="/logo.png" alt="e621dle logo" width={200} height={64} className="mx-auto" />
                 <span className="flex flex-row justify-center gap-[12px]">
-                    <span className="p-2 border-1 rounded-xl">Current Streak: {currentStreak}</span>
-                    <span className="p-2 border-1 rounded-xl">Best Streak: {bestStreak}</span>
+                    <span className="p-2 border-1 rounded-xl bg-[#014995]">Current Streak: {currentStreak}</span>
+                    <span className="p-2 border-1 rounded-xl bg-[#014995]">Best Streak: {bestStreak}</span>
                 </span>
             </header>
 
-            <div className={`text-center text-[36px] font-bold py-[20px]`}>Which tag has more posts?</div>
+            <div className={`text-center text-[36px] font-bold py-[20px]`}>
+                {isGameOver ? (
+                    <>
+                        <h2>Game Over!</h2>
+                        <button
+                            onClick={handleTryAgain}
+                            className="bg-[#014995] hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mt-2 text-lg"
+                        >
+                            Play Again
+                        </button>
+                    </>
+                ) : (
+                    "Which tag has more posts?"
+                )}
+            </div>
             <main className="flex flex-col text-center gap-[12px] min-h-[550px] w-full items-stretch rounded-xl">
                 <div
                     className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl animate-fade-in-up`}
@@ -202,7 +225,7 @@ export default function Home() {
                     )}
                 </div>
             </main>
-            <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#4a5568ab] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
+            <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
                 <span className="flex gap-2">
                     <a>Include Posts: </a>
                     <label className="flex gap-1">
