@@ -38,6 +38,12 @@ export default function Home() {
             setSelectedRatings(JSON.parse(selectedRatings));
         }
 
+        //get best score
+        const bestStreak = localStorage.getItem("bestStreak");
+        if (bestStreak && !isNaN(parseInt(bestStreak))) {
+            setBestStreak(parseInt(bestStreak));
+        }
+
         //load posts
         fetch("/api/posts")
             .then((res) => res.json())
@@ -105,6 +111,7 @@ export default function Home() {
                 setCurrentStreak((prev) => prev + 1);
                 if (currentStreak + 1 > bestStreak) {
                     setBestStreak(currentStreak + 1);
+                    localStorage.setItem("bestStreak", (currentStreak + 1).toString());
                 }
 
                 setLeftTag(rightTag);
