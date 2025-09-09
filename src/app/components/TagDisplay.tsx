@@ -36,7 +36,7 @@ export default function TagDisplay({
 
     return (
         <div
-            className={`flex flex-col grow gap-[12px] w-full h-full p-6 mx-[20px] bg-[#071e32] border-1 border-gray-600 rounded-xl shadow-md ${
+            className={`flex flex-col grow gap-[12px] w-full h-full p-1 md:p-6 mx-[20px] bg-[#071e32] border-1 border-gray-600 rounded-xl shadow-md ${
                 isRevealed ? "cursor-not-allowed" : "cursor-pointer"
             } hover:border-white hover:shadow-xl hover:shadow-white hover:-translate-y-2 transition-all`}
             onClick={() => handleChoice(choice)}
@@ -47,11 +47,13 @@ export default function TagDisplay({
             </span>
 
             <div className="flex flex-col mb-[0px]">
-                <span className="relative h-[300px] my-[12px] rounded-md overflow-hidden">
+                <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
                     <ImageCard tag={tag} selectedRatings={selectedRatings} />
                 </span>
                 {choice === "lower" ? (
-                    <span className="text-[42px] font-bold leading-none">{tag.count.toLocaleString()}</span>
+                    <span className="text-[32px] md:text-[42px] font-bold leading-none">
+                        {tag.count.toLocaleString()}
+                    </span>
                 ) : (
                     <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
                 )}

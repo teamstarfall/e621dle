@@ -170,17 +170,48 @@ export default function Home() {
     return (
         <div
             id="container"
-            className="font-sans items-center justify-items-center min-h-screen h-full max-w-[1200px] mx-auto w-screen p-8 pb-20"
+            className="font-sans items-center justify-items-center min-h-screen h-full max-w-[1200px] mx-auto w-screen p-4 md:p-8 pb-20"
         >
-            <header className="flex flex-col gap-[16px] justify-center text-center border-1 rounded-xl p-[16px] w-full bg-[#1f3c67] shadow-xl">
-                <Image src="/logo.png" alt="e621dle logo" width={200} height={64} className="mx-auto" />
-                <span className="flex flex-row justify-center gap-[12px]">
-                    <span className="p-2 border-1 rounded-xl bg-[#014995]">Current Streak: {currentStreak}</span>
-                    <span className="p-2 border-1 rounded-xl bg-[#014995]">Best Streak: {bestStreak}</span>
-                </span>
+            <header className="relative flex flex-col items-center border-1 rounded-xl p-4 w-full bg-[#1f3c67] shadow-xl">
+                <div className="flex flex-col items-center">
+                    <Image src="/logo.png" alt="e621dle logo" width={200} height={64} />
+                    <span className="flex flex-row gap-4 mt-2">
+                        <span className="p-2 border-1 rounded-xl bg-[#014995]">Current Streak: {currentStreak}</span>
+                        <span className="p-2 border-1 rounded-xl bg-[#014995]">Best Streak: {bestStreak}</span>
+                    </span>
+                </div>
+                <div className="flex flex-col mt-4 md:absolute md:top-4 md:right-4 md:mt-0">
+                    <a className="text-center md:text-left md:pr-[12px]">Include Ratings: </a>
+                    <div className="flex flex-row gap-[2px] md:flex-col">
+                        <label className="flex gap-1">
+                            <input
+                                type="checkbox"
+                                checked={selectedRatings.explicit}
+                                onChange={() => handleRatingChange("explicit")}
+                            />
+                            Explicit
+                        </label>
+                        <label className="flex gap-1 px-3 md:px-0">
+                            <input
+                                type="checkbox"
+                                checked={selectedRatings.questionable}
+                                onChange={() => handleRatingChange("questionable")}
+                            />
+                            Questionable
+                        </label>
+                        <label className="flex gap-1">
+                            <input
+                                type="checkbox"
+                                checked={selectedRatings.safe}
+                                onChange={() => handleRatingChange("safe")}
+                            />
+                            Safe
+                        </label>
+                    </div>
+                </div>
             </header>
 
-            <div className={`text-center text-[36px] font-bold py-[20px]`}>
+            <div className={`text-center text-2xl md:text-4xl font-bold py-5`}>
                 {isGameOver ? (
                     <>
                         <h2>Game Over!</h2>
@@ -195,10 +226,8 @@ export default function Home() {
                     "Which tag has more posts?"
                 )}
             </div>
-            <main className="flex flex-col text-center gap-[12px] min-h-[550px] w-full items-stretch rounded-xl">
-                <div
-                    className={`flex flex-row gap-[16px] h-full w-full row-start-2 items-center sm:items-start rounded-xl animate-fade-in-up`}
-                >
+            <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
+                <div className={`flex flex-col sm:flex-row gap-4 h-full w-full items-center rounded-xl`}>
                     {!leftTag || !rightTag ? (
                         <div className="flex items-center justify-center min-h-screen">Loading tags...</div>
                     ) : (
@@ -211,7 +240,7 @@ export default function Home() {
                                 getCategoryName={getCategoryName}
                                 ratings={selectedRatings}
                             />
-                            <div className="text-3xl font-bold my-auto px-[30px]">or</div>
+                            <div className="text-3xl font-bold mx-auto sm:my-auto sm:px-4">or</div>
                             <TagDisplay
                                 tag={rightTag}
                                 isRevealed={isRevealed}
@@ -225,34 +254,7 @@ export default function Home() {
                     )}
                 </div>
             </main>
-            <footer className="row-start-3 flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-[24px] border-1 rounded-xl shadow-xl w-full py-[12px]">
-                <span className="flex gap-2">
-                    <a>Include Posts: </a>
-                    <label className="flex gap-1">
-                        <input
-                            type="checkbox"
-                            checked={selectedRatings.explicit}
-                            onChange={() => handleRatingChange("explicit")}
-                        />
-                        Explicit
-                    </label>
-                    <label className="flex gap-1">
-                        <input
-                            type="checkbox"
-                            checked={selectedRatings.questionable}
-                            onChange={() => handleRatingChange("questionable")}
-                        />
-                        Questionable
-                    </label>
-                    <label className="flex gap-1">
-                        <input
-                            type="checkbox"
-                            checked={selectedRatings.safe}
-                            onChange={() => handleRatingChange("safe")}
-                        />
-                        Safe
-                    </label>
-                </span>
+            <footer className="flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-6">
                 <span>Created by Team Starfall (angelolz/azuretst)</span>
                 <span>
                     Inspired by{" "}
