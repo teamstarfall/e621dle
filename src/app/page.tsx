@@ -115,9 +115,9 @@ export default function Home() {
             setTimeout(() => {
                 setIsGameOver(true);
             }, SHOW_ANSWER_TIME_MS);
-        }
 
-        setIsRevealed(true);
+            setIsRevealed(true);
+        }
     };
 
     const handleTryAgain = () => {
@@ -215,22 +215,17 @@ export default function Home() {
             </header>
 
             <div className={`text-center text-2xl md:text-4xl py-5`}>
-                {isGameOver ? (
-                    <>
-                        <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
-                            <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
-                            <h1 className="text-lg">You guessed incorrectly!</h1>
-                            <button
-                                onClick={handleTryAgain}
-                                className="font-bold mt-4 px-4 py-2 bg-[#014995] hover:bg-blue-500 text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
-                            >
-                                Play Again
-                            </button>
-                        </Modal>
-                    </>
-                ) : (
-                    <span className="hidden sm:inline font-bold">Which tag has more posts?</span>
-                )}
+                <span className="hidden sm:inline font-bold">Which tag has more posts?</span>
+                <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
+                    <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
+                    <h1 className="text-lg">You guessed incorrectly!</h1>
+                    <button
+                        onClick={handleTryAgain}
+                        className="font-bold mt-4 px-4 py-2 bg-[#014995] hover:bg-blue-500 text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
+                    >
+                        Play Again
+                    </button>
+                </Modal>
             </div>
             <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
                 <div className={`flex flex-col sm:flex-row gap-4 h-full w-full items-center rounded-xl`}>
