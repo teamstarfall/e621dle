@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface Tag {
     name: string;
     category: number;
@@ -38,4 +40,10 @@ export interface TagDisplayProps {
     getCategoryName: (category: number) => string;
     animatedCount?: number;
     ratings: Ratings;
+}
+
+export interface ModalProps {
+    isRevealed: boolean;
+    onClose: () => void;
+    children: ReactNode;
 }

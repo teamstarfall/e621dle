@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Ratings, Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
 import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
+import Modal from "./components/Modal";
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (tags.length === 0) return null;
@@ -214,13 +215,23 @@ export default function Home() {
             <div className={`text-center text-2xl md:text-4xl font-bold py-5`}>
                 {isGameOver ? (
                     <>
-                        <h2>Game Over!</h2>
+                    <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
+                        <h2 className="pb-2">Game Over!</h2>
+                            <h1 className="text-xl">You guessed incorrectly!</h1>
+                            <button
+                                onClick={() => handleTryAgain}
+                                className="mt-4 px-4 py-2 bg-[#014995] text-white rounded-lg"
+                            >
+                                Play Again
+                            </button>
+                    </Modal>
+                        {/* <h2>Game Over!</h2>
                         <button
                             onClick={handleTryAgain}
                             className="bg-[#014995] hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mt-2 text-lg"
                         >
                             Play Again
-                        </button>
+                        </button> */}
                     </>
                 ) : (
                     <span className="hidden sm:inline">Which tag has more posts?</span>
