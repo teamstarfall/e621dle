@@ -36,9 +36,9 @@ export default function TagDisplay({
 
     return (
         <div
-            className={`flex flex-col grow gap-[12px] w-full h-full p-1 md:p-6 mx-[20px] bg-[#071e32] border-1 border-gray-600 rounded-xl shadow-md ${
+            className={`flex flex-col grow gap-[12px] w-full h-full p-1 md:p-6 mx-[20px] bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 ${
                 isRevealed ? "cursor-not-allowed" : "cursor-pointer"
-            } hover:border-white hover:shadow-xl hover:shadow-white hover:-translate-y-2 transition-all`}
+            } hover:border-white hover:ring-4 hover:ring-white hover:-translate-y-2 transition-all`}
             onClick={() => handleChoice(choice)}
         >
             <span className="flex flex-col">

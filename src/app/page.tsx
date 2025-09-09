@@ -123,9 +123,12 @@ export default function Home() {
     const handleTryAgain = () => {
         setIsGameOver(false);
         setCurrentStreak(0);
+        setIsRevealed(false);
+
         const newLeftTag = getRandomTag(allTags);
         let newRightTag = getRandomTag(allTags);
-        while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+
+        while (allTags.length > 1 && newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
             newRightTag = getRandomTag(allTags);
         }
         setLeftTag(newLeftTag);
@@ -133,7 +136,6 @@ export default function Home() {
         if (newLeftTag) {
             setAnimatedCount(0);
         }
-        setIsRevealed(false);
     };
 
     const handleRatingChange = (rating: keyof typeof selectedRatings) => {
@@ -212,29 +214,22 @@ export default function Home() {
                 </div>
             </header>
 
-            <div className={`text-center text-2xl md:text-4xl font-bold py-5`}>
+            <div className={`text-center text-2xl md:text-4xl py-5`}>
                 {isGameOver ? (
                     <>
-                    <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
-                        <h2 className="pb-2">Game Over!</h2>
-                            <h1 className="text-xl">You guessed incorrectly!</h1>
+                        <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
+                            <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
+                            <h1 className="text-lg">You guessed incorrectly!</h1>
                             <button
                                 onClick={handleTryAgain}
-                                className="mt-4 px-4 py-2 bg-[#014995] text-white rounded-lg"
+                                className="font-bold mt-4 px-4 py-2 bg-[#014995] hover:bg-blue-500 text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
                             >
                                 Play Again
                             </button>
-                    </Modal>
-                        {/* <h2>Game Over!</h2>
-                        <button
-                            onClick={handleTryAgain}
-                            className="bg-[#014995] hover:bg-blue-500 text-white font-bold py-2 px-4 rounded mt-2 text-lg"
-                        >
-                            Play Again
-                        </button> */}
+                        </Modal>
                     </>
                 ) : (
-                    <span className="hidden sm:inline">Which tag has more posts?</span>
+                    <span className="hidden sm:inline font-bold">Which tag has more posts?</span>
                 )}
             </div>
             <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
@@ -251,7 +246,7 @@ export default function Home() {
                                 getCategoryName={getCategoryName}
                                 ratings={selectedRatings}
                             />
-                            <div className="font-bold mx-auto sm:my-auto  sm:px-4">
+                            <div className="font-bold mx-auto sm:my-auto sm:px-4">
                                 <span className="text-3xl hidden sm:inline py-4">or</span>
                                 <span className="inline sm:hidden text-lg">Which tag has more posts?</span>
                             </div>
@@ -268,7 +263,7 @@ export default function Home() {
                     )}
                 </div>
             </main>
-            <footer className="flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-6">
+            <footer className="flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-8">
                 <span>Created by Team Starfall (angelolz/azuretst)</span>
                 <span>
                     Inspired by{" "}
