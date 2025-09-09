@@ -223,7 +223,7 @@ export default function Home() {
                         </button>
                     </>
                 ) : (
-                    "Which tag has more posts?"
+                    <span className="hidden sm:inline">Which tag has more posts?</span>
                 )}
             </div>
             <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
@@ -240,7 +240,10 @@ export default function Home() {
                                 getCategoryName={getCategoryName}
                                 ratings={selectedRatings}
                             />
-                            <div className="text-3xl font-bold mx-auto sm:my-auto sm:px-4">or</div>
+                            <div className="font-bold mx-auto sm:my-auto  sm:px-4">
+                                <span className="text-3xl hidden sm:inline py-4">or</span>
+                                <span className="inline sm:hidden text-lg">Which tag has more posts?</span>
+                            </div>
                             <TagDisplay
                                 tag={rightTag}
                                 isRevealed={isRevealed}

@@ -18,7 +18,7 @@ function AnimatedNumber({
         return (animatedCount !== undefined ? animatedCount : tagCount).toLocaleString();
     };
 
-    return <span className="text-[42px] font-bold leading-none">{displayCount()}</span>;
+    return <span className="text-[32px] md:text-[42px] font-bold leading-none">{displayCount()}</span>;
 }
 
 export default function TagDisplay({
