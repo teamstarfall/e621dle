@@ -87,21 +87,21 @@ function renameOldTagsFile() {
         // Check if the file exists before attempting to rename
         if (fs.existsSync(oldPath)) {
             fs.renameSync(oldPath, newPath);
-            console.log(`\tSuccessfully renamed ${oldPath} to ${newPath}`);
+            console.log(`	Successfully renamed ${oldPath} to ${newPath}`);
         } else {
-            console.log(`\t${oldPath} does not exist. Nothing to rename.`);
+            console.log(`	${oldPath} does not exist. Nothing to rename.`);
         }
     } catch (error) {
-        console.error(`\tError renaming file: ${error}`);
+        console.error(`	Error renaming file: ${error}`);
     }
 }
 
 async function retrieveFiles() {
     try {
         for (const f of files) {
-            console.log(`\tDownloading ${f.name}...`);
+            console.log(`	Downloading ${f.name}...`);
             if (fs.existsSync(f.csvPath)) {
-                console.log(`\t${f.name}.csv already exists, skipping download.`);
+                console.log(`	${f.name}.csv already exists, skipping download.`);
             } else {
                 await downloadAndExtract(f.url, f.csvPath);
             }
@@ -244,11 +244,11 @@ async function parsePosts(topTags) {
                     if (existingImage && existingImage.tag.name !== tag.name) {
                         if (score > existingImage.score) {
                             existingImage.tag.resetPreview(existingImage.ratingKey);
-                            tag.updatePreview(rating, score, url);
+                            tag.updatePreview(rating, score, url, fileExt);
                             usedImages.set(url, { tag, score, ratingKey });
                         }
                     } else {
-                        tag.updatePreview(rating, score, url);
+                        tag.updatePreview(rating, score, url, fileExt);
                         usedImages.set(url, { tag, score, ratingKey });
                     }
                 }
@@ -310,9 +310,9 @@ class Tag {
         this.count = count;
         this.aliases = [];
         this.images = {
-            explicit: { url: null, score: -Infinity },
-            questionable: { url: null, score: -Infinity },
-            safe: { url: null, score: -Infinity },
+            explicit: { url: null, score: -Infinity, fileExt: null },
+            questionable: { url: null, score: -Infinity, fileExt: null },
+            safe: { url: null, score: -Infinity, fileExt: null },
         };
     }
 
@@ -320,17 +320,17 @@ class Tag {
         this.aliases.push(alias);
     }
 
-    updatePreview(rating, score, url) {
+    updatePreview(rating, score, url, fileExt) {
         const ratingMap = { e: "explicit", q: "questionable", s: "safe" };
         const ratingKey = ratingMap[rating.toLowerCase()];
         if (!ratingKey) return;
 
         if (this.images[ratingKey].score === null || score > this.images[ratingKey].score) {
-            this.images[ratingKey] = { url, score };
+            this.images[ratingKey] = { url, score, fileExt };
         }
     }
 
     resetPreview(ratingKey) {
-        this.images[ratingKey] = { url: null, score: -Infinity };
+        this.images[ratingKey] = { url: null, score: -Infinity, fileExt: null };
     }
 }

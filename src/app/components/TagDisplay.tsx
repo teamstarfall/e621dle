@@ -1,7 +1,15 @@
-import { Tag, TagDisplayProps } from "../interfaces";
+import { TagDisplayProps } from "../interfaces";
 import ImageCard from "./ImageCard";
 
-function AnimatedNumber({ isRevealed, animatedCount, tagCount }: { isRevealed: boolean; animatedCount?: number; tagCount: number }) {
+function AnimatedNumber({
+    isRevealed,
+    animatedCount,
+    tagCount,
+}: {
+    isRevealed: boolean;
+    animatedCount?: number;
+    tagCount: number;
+}) {
     const displayCount = () => {
         if (!isRevealed) {
             return "?";
@@ -20,7 +28,7 @@ export default function TagDisplay({
     choice,
     getCategoryName,
     animatedCount,
-    ratings: selectedRatings
+    ratings: selectedRatings,
 }: TagDisplayProps) {
     if (!tag) {
         return null;
@@ -40,11 +48,9 @@ export default function TagDisplay({
 
             <div className="flex flex-col mb-[0px]">
                 <span className="relative h-[300px] my-[12px] rounded-md overflow-hidden">
-                    <ImageCard 
-                        tag={tag} 
-                        selectedRatings={selectedRatings}                    />
+                    <ImageCard tag={tag} selectedRatings={selectedRatings} />
                 </span>
-                {choice === 'lower' ? (
+                {choice === "lower" ? (
                     <span className="text-[42px] font-bold leading-none">{tag.count.toLocaleString()}</span>
                 ) : (
                     <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />

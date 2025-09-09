@@ -4,18 +4,18 @@ import { memo, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Ratings, Tag } from "../interfaces";
 
-const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag, selectedRatings: Ratings }) {
+const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag; selectedRatings: Ratings }) {
     const sources = useMemo(() => {
         const potential = [];
         const ratings: (keyof Ratings)[] = Object.keys(selectedRatings).filter(
             (key) => selectedRatings[key as keyof Ratings]
-          ) as (keyof Ratings)[];
+        ) as (keyof Ratings)[];
 
         for (const rating of ratings) {
             const url = tag.images[rating]?.url;
             if (url) {
                 potential.push(url);
-                potential.push(url.replace("/sample/", "/"));
+                potential.push(url.replace("/sample/", "/").replace(".jpg", "." + tag.images[rating]?.fileExt));
             }
         }
         return potential;

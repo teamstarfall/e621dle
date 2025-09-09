@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Ratings, Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
@@ -24,42 +25,43 @@ export default function Home() {
     const defaultRatings: Ratings = {
         explicit: false,
         questionable: false,
-        safe: true
+        safe: true,
     };
-    const [selectedRatings, setSelectedRatings] = useState<Ratings>(defaultRatings)
+    const [selectedRatings, setSelectedRatings] = useState<Ratings>(defaultRatings);
 
     useEffect(() => {
         //get options
-        
-        setSelectedRatings(JSON.parse(localStorage.getItem("selectedRatings") ?? ""));
+        const selectedRatings = localStorage.getItem("selectedRatings");
+        if (selectedRatings) {
+            setSelectedRatings(JSON.parse(selectedRatings));
+        }
 
         //load posts
         fetch("/api/posts")
-        .then((res) => res.json())
-        .then((tagsResponse: TagResponse) => {
-            setDate(tagsResponse.date);
-            setAllTags(tagsResponse.tags);
-            const newLeftTag = getRandomTag(tagsResponse.tags);
-            let newRightTag = getRandomTag(tagsResponse.tags);
-            
-            while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-                newRightTag = getRandomTag(tagsResponse.tags);
-            }
-            
-            setLeftTag(newLeftTag);
-            setRightTag(newRightTag);
-            
-            if (newLeftTag) {
-                setAnimatedCount(0);
-            }
-        })
-        .catch((error) => console.error("Failed to fetch tags:", error));
-        
+            .then((res) => res.json())
+            .then((tagsResponse: TagResponse) => {
+                setDate(tagsResponse.date);
+                setAllTags(tagsResponse.tags);
+                const newLeftTag = getRandomTag(tagsResponse.tags);
+                let newRightTag = getRandomTag(tagsResponse.tags);
+
+                while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+                    newRightTag = getRandomTag(tagsResponse.tags);
+                }
+
+                setLeftTag(newLeftTag);
+                setRightTag(newRightTag);
+
+                if (newLeftTag) {
+                    setAnimatedCount(0);
+                }
+            })
+            .catch((error) => console.error("Failed to fetch tags:", error));
     }, []);
 
     useEffect(() => {
         localStorage.setItem("selectedRatings", JSON.stringify(selectedRatings));
-    }, [selectedRatings])
+    }, [selectedRatings]);
 
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
@@ -125,11 +127,11 @@ export default function Home() {
     };
 
     const handleRatingChange = (rating: keyof typeof selectedRatings) => {
-        setSelectedRatings(prev => ({
+        setSelectedRatings((prev) => ({
             ...prev,
             [rating]: !prev[rating],
-        }))
-    }
+        }));
+    };
 
     const getCategoryName = (category: number) => {
         switch (category) {
@@ -162,7 +164,7 @@ export default function Home() {
             className="font-sans items-center justify-items-center min-h-screen h-full max-w-[1200px] mx-auto w-screen p-8 pb-20"
         >
             <header className="flex flex-col gap-[16px] justify-center text-center border-1 rounded-xl p-[16px] w-full bg-[#4a5568ab] shadow-xl">
-                <h2 className="text-[48px] font-bold">e621dle</h2>
+                <Image src="/logo.png" alt="e621dle logo" width={200} height={64} className="mx-auto" />
                 <span className="flex flex-row justify-center gap-[12px]">
                     <span className="p-2 border-1 rounded-xl">Current Streak: {currentStreak}</span>
                     <span className="p-2 border-1 rounded-xl">Best Streak: {bestStreak}</span>
@@ -204,7 +206,7 @@ export default function Home() {
                 <span className="flex gap-2">
                     <a>Include Posts: </a>
                     <label className="flex gap-1">
-                        <input 
+                        <input
                             type="checkbox"
                             checked={selectedRatings.explicit}
                             onChange={() => handleRatingChange("explicit")}
@@ -212,7 +214,7 @@ export default function Home() {
                         Explicit
                     </label>
                     <label className="flex gap-1">
-                        <input 
+                        <input
                             type="checkbox"
                             checked={selectedRatings.questionable}
                             onChange={() => handleRatingChange("questionable")}
@@ -220,7 +222,7 @@ export default function Home() {
                         Questionable
                     </label>
                     <label className="flex gap-1">
-                        <input 
+                        <input
                             type="checkbox"
                             checked={selectedRatings.safe}
                             onChange={() => handleRatingChange("safe")}
@@ -240,5 +242,3 @@ export default function Home() {
         </div>
     );
 }
-
-

@@ -21,6 +21,7 @@ export interface ImagePreviews {
 export interface TopRating {
     url: string;
     score: number;
+    fileExt: string;
 }
 
 export interface Ratings {
@@ -36,5 +37,5 @@ export interface TagDisplayProps {
     choice: "higher" | "lower";
     getCategoryName: (category: number) => string;
     animatedCount?: number;
-    ratings: object
+    ratings: Ratings;
 }
