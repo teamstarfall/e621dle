@@ -19,7 +19,7 @@ export default function Home() {
     const [rightTag, setRightTag] = useState<Tag | null>(null);
 
     const [isRevealed, setIsRevealed] = useState(false);
-    const [isGameOver, setIsGameOver] = useState(false);
+    const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
@@ -47,8 +47,10 @@ export default function Home() {
                 const newLeftTag = getRandomTag(tagsResponse.tags);
                 let newRightTag = getRandomTag(tagsResponse.tags);
 
-                while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-                    newRightTag = getRandomTag(tagsResponse.tags);
+                if (tagsResponse.tags.length > 1) {
+                    while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+                        newRightTag = getRandomTag(tagsResponse.tags);
+                    }
                 }
 
                 setLeftTag(newLeftTag);
@@ -92,6 +94,8 @@ export default function Home() {
     const handleChoice = (selectedChoice: "higher" | "lower") => {
         if (isRevealed || !leftTag || !rightTag) return;
 
+        setAnimatedCount(0);
+
         const wasCorrect =
             (selectedChoice === "higher" && rightTag.count >= leftTag.count) ||
             (selectedChoice === "lower" && rightTag.count <= leftTag.count);
@@ -113,29 +117,27 @@ export default function Home() {
             }, SHOW_ANSWER_TIME_MS);
         } else {
             setTimeout(() => {
-                setIsGameOver(true);
+                setShowGameOverModal(true);
             }, SHOW_ANSWER_TIME_MS);
-
-            setIsRevealed(true);
         }
+        setIsRevealed(true);
     };
 
     const handleTryAgain = () => {
-        setIsGameOver(false);
         setCurrentStreak(0);
+        setShowGameOverModal(false);
         setIsRevealed(false);
 
         const newLeftTag = getRandomTag(allTags);
         let newRightTag = getRandomTag(allTags);
 
-        while (allTags.length > 1 && newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-            newRightTag = getRandomTag(allTags);
+        if (allTags.length > 1) {
+            while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
+                newRightTag = getRandomTag(allTags);
+            }
         }
         setLeftTag(newLeftTag);
         setRightTag(newRightTag);
-        if (newLeftTag) {
-            setAnimatedCount(0);
-        }
     };
 
     const handleRatingChange = (rating: keyof typeof selectedRatings) => {
@@ -216,7 +218,7 @@ export default function Home() {
 
             <div className={`text-center text-2xl md:text-4xl py-5`}>
                 <span className="hidden sm:inline font-bold">Which tag has more posts?</span>
-                <Modal isRevealed={isRevealed} onClose={() => setIsRevealed(false)}>
+                <Modal isRevealed={showGameOverModal} onClose={() => setShowGameOverModal(false)}>
                     <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
                     <h1 className="text-lg">You guessed incorrectly!</h1>
                     <button
