@@ -219,7 +219,7 @@ export default function Home() {
                         <h2 className="pb-2">Game Over!</h2>
                             <h1 className="text-xl">You guessed incorrectly!</h1>
                             <button
-                                onClick={() => handleTryAgain}
+                                onClick={handleTryAgain}
                                 className="mt-4 px-4 py-2 bg-[#014995] text-white rounded-lg"
                             >
                                 Play Again
