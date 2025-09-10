@@ -308,11 +308,40 @@ export default function Home() {
                 </div>
             </main>
             <footer className="flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-8">
-                <span>Created by Team Starfall (angelolz/azuretst)</span>
+                <span>
+                    Made with 💚💙 by Team Starfall (
+                    <a className="underline" href="https://angelolz.one" target="_blank" rel="noopener noreferrer">
+                        angelolz
+                    </a>
+                    {" + "}
+                    <a
+                        className="underline"
+                        href="https://twitter.com/azuretoast"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        AzureToast
+                    </a>
+                    )
+                </span>
                 <span>
                     Inspired by{" "}
-                    <a className="underline" href="https://rule34dle.vercel.app/">
+                    <a
+                        className="underline"
+                        href="https://rule34dle.vercel.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
                         Rule34dle
+                    </a>
+                    {" | "}
+                    <a
+                        className="underline"
+                        href="https://github.com/teamstarfall/e621dle"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Github Repo
                     </a>
                 </span>
                 {date && <span>Data is based on {date}.</span>}
