@@ -1,47 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #152f56;
-  --foreground: #ededed;
+    --background: #152f56;
+    --foreground: #ededed;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-inter-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  /* font-family: Verdana, Helvetica, sans-serif; */
+    background: var(--background);
+    color: var(--foreground);
+    /* font-family: Verdana, Helvetica, sans-serif; */
 }
 
 @keyframes fly-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .animate-fly-fade-in {
-  animation: fly-fade-in 0.5s ease-in-out;
+    animation: fly-fade-in 0.5s ease-in-out;
 }
 
 .animate-fade-in {
-  animation: fade-in 0.5s ease-in-out;
+    animation: fade-in 0.5s ease-in-out;
 }

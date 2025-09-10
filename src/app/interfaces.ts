@@ -50,9 +50,16 @@ export interface ModalProps {
     children: ReactNode;
 }
 
-export interface SettingsProps {
-    ratingLevel: RatingLevel;
-    setRatingLevel: React.Dispatch<React.SetStateAction<RatingLevel>>;
-    characterTagsOnly: boolean;
-    toggleCharacters: (value: boolean) => void;
+export interface ErrorBoundaryState {
+    error: Error | null;
+    didThrow: boolean;
+}
+
+export interface ErrorBoundaryProps {
+    fallback?: React.ReactNode;
+    children?: React.ReactNode;
+}
+
+export interface GameProps {
+    posts: Promise<TagResponse>;
 }
