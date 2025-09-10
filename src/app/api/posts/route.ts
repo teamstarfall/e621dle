@@ -1,30 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import path from "path";
 import { promises as fs } from "fs";
-import { Tag, TagResponse } from "@/app/interfaces";
+import { TagResponse } from "@/app/interfaces";
 
-export async function GET(req: NextRequest) {
-    const jsonDirectory = path.join(process.cwd(), "resources");
+export async function GET() {
     try {
-        const fileContents = await fs.readFile(path.join(jsonDirectory, "tags.json"), "utf8");
-        const data: TagResponse = JSON.parse(fileContents);
+        let data: TagResponse;
 
-        const searchParams = req.nextUrl.searchParams;
-        const ratings = searchParams.get("ratings")?.split(",") || [];
-
-        if (ratings.length > 0) {
-            const filteredTags: Tag[] = [];
-            for (const tag of data.tags) {
-                if (ratings.includes(tag.rating)) {
-                    filteredTags.push(tag);
-                }
+        if (process.env.NODE_ENV === "development") {
+            const filePath = path.join(process.cwd(), "resources", "tags.json");
+            const fileContents = await fs.readFile(filePath, "utf8");
+            data = JSON.parse(fileContents);
+        } else {
+            const response = await fetch(
+                "https://raw.githubusercontent.com/teamstarfall/e621dle/main/resources/tags.json",
+                { cache: "no-store" }
+            );
+            if (!response.ok) {
+                throw new Error(`Failed to fetch tags.json from ${process.env.TAGS_URL}`);
             }
-            data.tags = filteredTags;
+            data = await response.json();
         }
 
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Error reading or parsing tags.json:", error);
-        return new Response("Error reading or parsing tags.json", { status: 500 });
+        console.error("Error fetching tags.json:", error);
+        return new Response("Error fetching tags.json", { status: 500 });
     }
 }
