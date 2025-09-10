@@ -307,7 +307,7 @@ export default function Home() {
                     )}
                 </div>
             </main>
-            <footer className="flex flex-col flex-wrap items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-8">
+            <footer className="flex flex-col flex-wrap text-center items-center justify-center bg-[#1f3c67] bottom-6 border-1 rounded-xl shadow-xl w-full py-3 mt-8 gap-1">
                 <span>
                     Made with 💚💙 by Team Starfall (
                     <a className="underline" href="https://angelolz.one" target="_blank" rel="noopener noreferrer">
@@ -344,7 +344,7 @@ export default function Home() {
                         Github Repo
                     </a>
                 </span>
-                {date && <span>Data is based on {date}.</span>}
+                {date && <span className="mt-4 italic text-gray-400 text-[12px]">Data is based on {date}.</span>}
             </footer>
         </div>
     );
