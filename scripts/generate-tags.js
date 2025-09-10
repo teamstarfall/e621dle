@@ -19,11 +19,6 @@ const files = [
         csvPath: `csv/posts-${yesterday}.csv`,
     },
     {
-        name: "tag_aliases",
-        url: `https://e621.net/db_export/tag_aliases-${yesterday}.csv.gz`,
-        csvPath: `csv/tag_aliases-${yesterday}.csv`,
-    },
-    {
         name: "tags",
         url: `https://e621.net/db_export/tags-${yesterday}.csv.gz`,
         csvPath: `csv/tags-${yesterday}.csv`,
@@ -54,11 +49,6 @@ async function generateTags() {
     begin = Date.now();
     await parseTags(tags);
     console.log(`Parsed tags in ${Date.now() - begin} ms.`);
-
-    console.log("Parsing aliases...");
-    begin = Date.now();
-    await parseAliases(tags);
-    console.log(`Parsed aliases in ${Date.now() - begin} ms.`);
 
     console.log("Retrieving top tags by category...");
     begin = Date.now();
@@ -140,7 +130,7 @@ async function parseTags(tags) {
         const parser = parse({ skip_empty_lines: true });
         let isFirstLine = true;
 
-        fs.createReadStream(files[2].csvPath)
+        fs.createReadStream(files[1].csvPath)
             .pipe(parser)
             .on("data", (line) => {
                 if (isFirstLine) {
@@ -155,32 +145,6 @@ async function parseTags(tags) {
                 const count = parseInt(line[3], 10);
 
                 tags.set(name, new Tag(name, category, count));
-            })
-            .on("end", () => resolve(tags))
-            .on("error", reject);
-    });
-}
-
-async function parseAliases(tags) {
-    return new Promise((resolve, reject) => {
-        const parser = parse({ skip_empty_lines: true });
-        let isFirstLine = true;
-
-        fs.createReadStream(files[1].csvPath)
-            .pipe(parser)
-            .on("data", (line) => {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    return;
-                }
-
-                if (line.length < 5) return;
-
-                const alias = line[1];
-                const canonical = line[2];
-
-                const tag = tags.get(canonical);
-                if (tag) tag.addAlias(alias);
             })
             .on("end", () => resolve(tags))
             .on("error", reject);
@@ -308,16 +272,11 @@ class Tag {
         this.name = name;
         this.category = category;
         this.count = count;
-        this.aliases = [];
         this.images = {
             explicit: { url: null, score: -Infinity, fileExt: null },
             questionable: { url: null, score: -Infinity, fileExt: null },
             safe: { url: null, score: -Infinity, fileExt: null },
         };
-    }
-
-    addAlias(alias) {
-        this.aliases.push(alias);
     }
 
     updatePreview(rating, score, url, fileExt) {
