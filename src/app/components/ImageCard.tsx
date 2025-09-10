@@ -2,31 +2,40 @@
 
 import { memo, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Ratings, Tag } from "../interfaces";
+import { ImagePreviews, RatingLevel, Tag } from "../interfaces";
 
-const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag; selectedRatings: Ratings }) {
+const ImageCard = memo(function ImageCard({ tag, ratingLevel }: { tag: Tag; ratingLevel: RatingLevel }) {
     const sources = useMemo(() => {
-        const potential = [];
-        const ratings: (keyof Ratings)[] = Object.keys(selectedRatings).filter(
-            (key) => selectedRatings[key as keyof Ratings]
-        ) as (keyof Ratings)[];
+        if (ratingLevel === "No Images") {
+            return [];
+        }
 
-        for (const rating of ratings) {
+        const potential = [];
+        const ratingsToShow: (keyof ImagePreviews)[] = [];
+
+        if (ratingLevel === "Safe") {
+            ratingsToShow.push("safe");
+        } else if (ratingLevel === "Questionable") {
+            ratingsToShow.push("questionable", "safe");
+        } else if (ratingLevel === "Explicit") {
+            ratingsToShow.push("explicit", "questionable", "safe");
+        }
+
+        for (const rating of ratingsToShow) {
             const url = tag.images[rating]?.url;
             if (url) {
                 potential.push(url);
                 potential.push(url.replace("/sample/", "/").replace(".jpg", "." + tag.images[rating]?.fileExt));
             }
         }
-
         return potential;
-    }, [tag, selectedRatings]);
+    }, [tag, ratingLevel]);
 
     const [sourceIndex, setSourceIndex] = useState(0);
 
     useEffect(() => {
         setSourceIndex(0);
-    }, [tag, selectedRatings]);
+    }, [tag, ratingLevel]);
 
     const handleError = () => {
         setSourceIndex((prevIndex) => prevIndex + 1);

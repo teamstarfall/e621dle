@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Ratings, Tag, TagResponse } from "./interfaces";
+import { RatingLevel, Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
 import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
 import Modal from "./components/Modal";
@@ -25,18 +25,13 @@ export default function Home() {
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
 
-    const defaultRatings: Ratings = {
-        explicit: false,
-        questionable: false,
-        safe: true,
-    };
-    const [selectedRatings, setSelectedRatings] = useState<Ratings>(defaultRatings);
+    const [ratingLevel, setRatingLevel] = useState<RatingLevel>("Safe");
 
     useEffect(() => {
         //get options
-        const selectedRatings = localStorage.getItem("selectedRatings");
-        if (selectedRatings) {
-            setSelectedRatings(JSON.parse(selectedRatings));
+        const savedRatingLevel = localStorage.getItem("ratingLevel") as RatingLevel;
+        if (savedRatingLevel) {
+            setRatingLevel(savedRatingLevel);
         }
 
         const adultWarning = localStorage.getItem("adultWarningAccept");
@@ -76,8 +71,8 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem("selectedRatings", JSON.stringify(selectedRatings));
-    }, [selectedRatings]);
+        localStorage.setItem("ratingLevel", ratingLevel);
+    }, [ratingLevel]);
 
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
@@ -162,13 +157,6 @@ export default function Home() {
         setRightTag(newRightTag);
     };
 
-    const handleRatingChange = (rating: keyof typeof selectedRatings) => {
-        setSelectedRatings((prev) => ({
-            ...prev,
-            [rating]: !prev[rating],
-        }));
-    };
-
     const getCategoryName = (category: number) => {
         switch (category) {
             case 0:
@@ -235,33 +223,20 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="flex flex-col mt-4 md:absolute md:top-4 md:right-4 md:mt-0">
-                    <a className="text-center md:text-left md:pr-[12px]">Include Ratings: </a>
-                    <div className="flex flex-row gap-[2px] md:flex-col">
-                        <label className="flex gap-1">
-                            <input
-                                type="checkbox"
-                                checked={selectedRatings.explicit}
-                                onChange={() => handleRatingChange("explicit")}
-                            />
-                            Explicit
-                        </label>
-                        <label className="flex gap-1 px-3 md:px-0">
-                            <input
-                                type="checkbox"
-                                checked={selectedRatings.questionable}
-                                onChange={() => handleRatingChange("questionable")}
-                            />
-                            Questionable
-                        </label>
-                        <label className="flex gap-1">
-                            <input
-                                type="checkbox"
-                                checked={selectedRatings.safe}
-                                onChange={() => handleRatingChange("safe")}
-                            />
-                            Safe
-                        </label>
-                    </div>
+                    <label htmlFor="rating-select" className="text-center md:text-left md:pr-[12px]">
+                        Include Ratings:
+                    </label>
+                    <select
+                        id="rating-select"
+                        value={ratingLevel}
+                        onChange={(e) => setRatingLevel(e.target.value as RatingLevel)}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    >
+                        <option value="No Images">No Images</option>
+                        <option value="Safe">Safe</option>
+                        <option value="Questionable">Questionable</option>
+                        <option value="Explicit">Explicit</option>
+                    </select>
                 </div>
             </header>
 
@@ -291,7 +266,7 @@ export default function Home() {
                                 handleChoice={handleChoice}
                                 choice="lower"
                                 getCategoryName={getCategoryName}
-                                ratings={selectedRatings}
+                                ratingLevel={ratingLevel}
                             />
                             <div className="font-bold mx-auto sm:my-auto sm:px-4">
                                 <span className="text-3xl hidden sm:inline py-4">or</span>
@@ -304,7 +279,7 @@ export default function Home() {
                                 choice="higher"
                                 getCategoryName={getCategoryName}
                                 animatedCount={animatedCount}
-                                ratings={selectedRatings}
+                                ratingLevel={ratingLevel}
                             />
                         </>
                     )}

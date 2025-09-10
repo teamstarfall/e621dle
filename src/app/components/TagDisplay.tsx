@@ -28,7 +28,7 @@ export default function TagDisplay({
     choice,
     getCategoryName,
     animatedCount,
-    ratings: selectedRatings,
+        ratingLevel,
 }: TagDisplayProps) {
     if (!tag) {
         return null;
@@ -48,7 +48,7 @@ export default function TagDisplay({
 
             <div className="flex flex-col mb-[0px]">
                 <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
-                    <ImageCard tag={tag} selectedRatings={selectedRatings} />
+                    <ImageCard tag={tag} ratingLevel={ratingLevel} />
                 </span>
                 {choice === "lower" ? (
                     <span className="text-[32px] md:text-[42px] font-bold leading-none">

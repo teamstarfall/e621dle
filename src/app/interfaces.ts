@@ -32,6 +32,8 @@ export interface Ratings {
     safe: boolean;
 }
 
+export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
+
 export interface TagDisplayProps {
     tag: Tag | null;
     isRevealed: boolean;
@@ -39,7 +41,7 @@ export interface TagDisplayProps {
     choice: "higher" | "lower";
     getCategoryName: (category: number) => string;
     animatedCount?: number;
-    ratings: Ratings;
+    ratingLevel: RatingLevel;
 }
 
 export interface ModalProps {
