@@ -25,6 +25,71 @@ const files = [
     },
 ];
 
+// no you may not argue this blacklist with me (but i'm open to suggestions)
+const blacklist = [
+    "gore",
+    "scat",
+    "watersports",
+    "young",
+    "loli",
+    "shota",
+    "vore",
+    "guro",
+    "cub",
+    "gore",
+    "diaper",
+    "blood",
+    "anal_vore",
+    "poop",
+    "snuff",
+    "death",
+    "castration",
+    "shit",
+    "vomit",
+    "morbidly_obese",
+    "amputee",
+    "unbirthing",
+    "amputee",
+    "rape",
+    "poo",
+    "what",
+    "infantilism",
+    "penectomy",
+    "decapitation",
+    "hyperscat",
+    "diapers",
+    "babyfur",
+    "torture",
+    "feces",
+    "dead",
+    "pooping",
+    "real",
+    "amputation",
+    "suicide",
+    "guts",
+    "nazi",
+    "gaping",
+    "disembowelment",
+    "puke",
+    "murder",
+    "underage",
+    "dismembered",
+    "bestiality",
+    "beastiality",
+    "unbirth",
+    "pedo",
+    "dismemberment",
+    "necrophilia",
+    "pregnancy",
+    "shitting_dicknipples",
+    "urethral",
+    "mutilation",
+    "diarrhea",
+    "drowning",
+    "cbt",
+    "lolicon",
+];
+
 (async () => {
     try {
         await generateTags();
@@ -141,6 +206,8 @@ async function parseTags(tags) {
                 if (line.length < 4) return;
 
                 const name = line[1];
+                if (blacklist.includes(name)) return;
+
                 const category = parseInt(line[2], 10);
                 const count = parseInt(line[3], 10);
 
@@ -158,6 +225,7 @@ async function parsePosts(topTags) {
 
     return new Promise((resolve, reject) => {
         const parser = parse({ skip_empty_lines: true });
+        const ratingMap = { e: "explicit", q: "questionable", s: "safe" };
         let isFirstLine = true;
 
         fs.createReadStream(files[0].csvPath)
@@ -168,11 +236,10 @@ async function parsePosts(topTags) {
                     return; // skip header
                 }
 
-                // Skip unwanted formats/invalid data
                 if (
                     line.length !== 29 ||
                     !isNumber(line[0]) ||
-                    line[20] === "t" || // deleted
+                    line[20] === "t" || // post is deleted
                     ["webm", "swf", "gif", "mp4"].includes(line[11]) ||
                     parseInt(line[23], 10) < 0
                 )
@@ -183,26 +250,24 @@ async function parsePosts(topTags) {
                 const fileExt = line[11];
                 const score = parseInt(line[23], 10);
 
-                // Only consider PNG/JPG
                 if (!["png", "jpg"].includes(fileExt)) return;
 
                 const url = createImageUrl(md5);
 
-                // Split tags once, loop through
                 const postTags = line[8].split(/\s+/);
                 for (let i = 0; i < postTags.length; i++) {
                     const tagName = postTags[i];
+
+                    // don't process post if a tag in a post is in blacklist
+                    if (blacklist.includes(tagName)) break;
+
                     if (!targetTagsSet.has(tagName)) continue;
 
                     const tag = topTagsMap.get(tagName);
-                    if ([4, 5].includes(tag.category) && !postTags.includes("solo")) continue;
-                    if (!tag) continue;
+                    if (!tag || ([4, 5].includes(tag.category) && !postTags.includes("solo"))) continue;
 
-                    const ratingMap = { e: "explicit", q: "questionable", s: "safe" };
                     const ratingKey = ratingMap[rating.toLowerCase()];
-                    if (!ratingKey) continue;
-
-                    if (tag.images[ratingKey].score > score) continue;
+                    if (!ratingKey || tag.images[ratingKey].score > score) continue;
 
                     const existingImage = usedImages.get(url);
                     if (existingImage && existingImage.tag.name !== tag.name) {
