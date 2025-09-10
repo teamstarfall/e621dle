@@ -18,8 +18,9 @@ const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag; 
                 potential.push(url.replace("/sample/", "/").replace(".jpg", "." + tag.images[rating]?.fileExt));
             }
         }
+
         return potential;
-    }, [tag]);
+    }, [tag, selectedRatings]);
 
     const [sourceIndex, setSourceIndex] = useState(0);
 
@@ -28,17 +29,14 @@ const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag; 
     }, [tag, selectedRatings]);
 
     const handleError = () => {
-        if (sourceIndex + 1 < sources.length) {
-            console.log(`Failed to load image: ${sources[sourceIndex]}, currently trying: ${sources[sourceIndex + 1]}`);
-            setSourceIndex((prevIndex) => prevIndex + 1);
-        }
+        setSourceIndex((prevIndex) => prevIndex + 1);
     };
 
     const currentSrc = sources[sourceIndex];
 
     return (
         <>
-            {currentSrc && (
+            {currentSrc ? (
                 <Image
                     key={currentSrc}
                     src={currentSrc}
@@ -48,6 +46,19 @@ const ImageCard = memo(function ImageCard({ tag, selectedRatings }: { tag: Tag; 
                     unoptimized
                     onError={handleError}
                 />
+            ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                    <div className="relative flex items-center justify-center">
+                        <Image
+                            src="/no-image.png"
+                            alt="No image found"
+                            width={175}
+                            height={175}
+                            className="object-contain rounded-md"
+                        />
+                    </div>
+                    <p className="text-center italic text-gray-500">Couldn&apos;t get image.</p>
+                </div>
             )}
         </>
     );

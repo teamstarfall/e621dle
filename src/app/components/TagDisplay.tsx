@@ -43,7 +43,7 @@ export default function TagDisplay({
         >
             <span className="flex flex-col">
                 <span className="font-bold text-[24px]">{tag.name}</span>
-                <span className="italic text-[14px]">{getCategoryName(tag.category)}</span>
+                <span className="italic text-[14px] leading-0 my-2">{getCategoryName(tag.category)}</span>
             </span>
 
             <div className="flex flex-col mb-[0px]">

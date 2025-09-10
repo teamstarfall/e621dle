@@ -20,6 +20,7 @@ export default function Home() {
 
     const [isRevealed, setIsRevealed] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
+    const [showAdultWarning, setShowAdultWarning] = useState(true);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
@@ -37,6 +38,11 @@ export default function Home() {
         if (selectedRatings) {
             setSelectedRatings(JSON.parse(selectedRatings));
         }
+
+        const adultWarning = localStorage.getItem("adultWarningAccept");
+        // if (adultWarning) {
+        //     setShowAdultWarning(false);
+        // }
 
         //get best score
         const bestStreak = localStorage.getItem("bestStreak");
@@ -130,6 +136,15 @@ export default function Home() {
         setIsRevealed(true);
     };
 
+    const handleAdultWarning = (selectedChoice: boolean) => {
+        if (selectedChoice) {
+            setShowAdultWarning(false);
+            localStorage.setItem("adultWarningAccept", "true");
+        } else {
+            window.location.href = "https://google.com";
+        }
+    };
+
     const handleTryAgain = () => {
         setCurrentStreak(0);
         setShowGameOverModal(false);
@@ -179,6 +194,32 @@ export default function Home() {
         }
     };
 
+    if (showAdultWarning) {
+        return (
+            <div className={`text-center text-2xl md:text-4xl py-5`}>
+                <Modal isRevealed={showAdultWarning} onClose={() => setShowGameOverModal(false)}>
+                    <h2 className="pb-2 text-3xl font-bold">Adult Content Ahead!</h2>
+                    <h1 className="text-lg">
+                        You must be <b>18 years or older</b> to access this website.
+                    </h1>
+                    <span className="flex flex-col">
+                        <button
+                            onClick={() => handleAdultWarning(true)}
+                            className="mt-4 px-4 py-2 bg-[#6a0000]  hover:bg-[#f80000] text-white rounded-lg text-lg transition-all ring hover:ring-3 border-gray-300 shadow-xl"
+                        >
+                            Yes, I am 18 and older
+                        </button>
+                        <button
+                            onClick={() => handleAdultWarning(false)}
+                            className="mt-4 px-4 py-2 bg-[#073f12]  hover:bg-[#0e7f27] text-white rounded-lg text-lg transition-all ring hover:ring-3 border-gray-300 shadow-xl"
+                        >
+                            No, I am out!
+                        </button>
+                    </span>
+                </Modal>
+            </div>
+        );
+    }
     return (
         <div
             id="container"
@@ -187,10 +228,11 @@ export default function Home() {
             <header className="relative flex flex-col items-center border-1 rounded-xl p-4 w-full bg-[#1f3c67] shadow-xl">
                 <div className="flex flex-col items-center">
                     <Image src="/logo.png" alt="e621dle logo" width={200} height={64} />
-                    <span className="flex flex-row gap-4 mt-2">
-                        <span className="p-2 border-1 rounded-xl bg-[#014995]">Current Streak: {currentStreak}</span>
-                        <span className="p-2 border-1 rounded-xl bg-[#014995]">Best Streak: {bestStreak}</span>
-                    </span>
+                    <div className="flex items-center px-4 py-2 border-1 rounded-full bg-[#071e32] mt-4">
+                        <span>Current: {currentStreak}</span>
+                        <div className="h-4 w-px bg-gray-400 mx-2"></div>
+                        <span>Best: {bestStreak}</span>
+                    </div>
                 </div>
                 <div className="flex flex-col mt-4 md:absolute md:top-4 md:right-4 md:mt-0">
                     <a className="text-center md:text-left md:pr-[12px]">Include Ratings: </a>
@@ -230,12 +272,13 @@ export default function Home() {
                     <h1 className="text-lg">You guessed incorrectly!</h1>
                     <button
                         onClick={handleTryAgain}
-                        className="font-bold mt-4 px-4 py-2 bg-[#014995] hover:bg-blue-500 text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
+                        className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
                     >
                         Play Again
                     </button>
                 </Modal>
             </div>
+
             <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
                 <div className={`flex flex-col sm:flex-row gap-4 h-full w-full items-center rounded-xl`}>
                     {!leftTag || !rightTag ? (
