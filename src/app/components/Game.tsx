@@ -68,12 +68,8 @@ export default function Game({ posts }: GameProps) {
     }, [tags, showCharactersOnly]);
 
     //game states
-    const [leftTag, setLeftTag] = useState<Tag | null>(
-        getRandomTag(filteredTags),
-    );
-    const [rightTag, setRightTag] = useState<Tag | null>(
-        getRandomTag(filteredTags),
-    );
+    const [leftTag, setLeftTag] = useState<Tag | null>(null);
+    const [rightTag, setRightTag] = useState<Tag | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [showContinue, setShowContinue] = useState(false);
@@ -104,9 +100,27 @@ export default function Game({ posts }: GameProps) {
         }
     }, [isRevealed, leftTag, rightTag]);
 
+    useEffect(() => {
+        if (showCharactersOnly === null) {
+            setShowCharactersOnly(characterTagsOnly);
+            return;
+        }
+
+        if (leftTag === null || rightTag === null) {
+            setLeftTag(getRandomTag(filteredTags));
+            setRightTag(getRandomTag(filteredTags));
+        }
+    }, [
+        characterTagsOnly,
+        filteredTags,
+        leftTag,
+        rightTag,
+        showCharactersOnly,
+    ]);
+
     function continueGame() {
         setCurrentStreak((prev) => prev + 1);
-        if (currentStreak + 1 > bestStreak) {
+        if (currentStreak + 1 > (bestStreak ?? 0)) {
             setBestStreak(currentStreak + 1);
             localStorage.setItem(BEST_STREAK, (currentStreak + 1).toString());
         }
@@ -266,7 +280,7 @@ export default function Game({ posts }: GameProps) {
                                 handleChoice={handleChoice}
                                 choice="lower"
                                 getCategoryName={getCategoryName}
-                                ratingLevel={ratingLevel}
+                                ratingLevel={ratingLevel ?? "Safe"}
                             />
                             <div className="font-bold mx-auto sm:my-auto sm:px-4">
                                 <span className="text-3xl hidden sm:inline py-4">
@@ -283,7 +297,7 @@ export default function Game({ posts }: GameProps) {
                                 choice="higher"
                                 getCategoryName={getCategoryName}
                                 animatedCount={animatedCount}
-                                ratingLevel={ratingLevel}
+                                ratingLevel={ratingLevel ?? "Safe"}
                             />
                         </>
                     )}

@@ -51,18 +51,23 @@ export function useLocalStorage<T extends string | number | boolean>(
         if (snapshot === null) {
             return defaultValue;
         }
+        console.log(key, snapshot);
         return deserialize(snapshot);
     }, [key, deserialize, defaultValue]);
 
-    const serverSnapshot = useCallback(() => defaultValue, [defaultValue]);
+    const serverSnapshot = useCallback(() => null, []);
 
-    const value = useSyncExternalStore<T>(subscribe, snapshot, serverSnapshot);
+    const value = useSyncExternalStore<T | null>(
+        subscribe,
+        snapshot,
+        serverSnapshot,
+    );
 
     const updater = useCallback<Dispatch<SetStateAction<T>>>(
         (next: T | ((prev: T) => T)) => {
-            const oldValue = serialize(value);
+            const oldValue = serialize(value ?? defaultValue);
             const newValue = serialize(
-                typeof next === "function" ? next(value) : next,
+                typeof next === "function" ? next(value ?? defaultValue) : next,
             );
 
             localStorage.setItem(key, newValue);
@@ -78,7 +83,7 @@ export function useLocalStorage<T extends string | number | boolean>(
                 }),
             );
         },
-        [key, serialize, value],
+        [key, serialize, value, defaultValue],
     );
 
     return [value, updater] as const;
