@@ -1,10 +1,18 @@
 "use client";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { RatingLevel, Tag, TagResponse } from "./interfaces";
 import TagDisplay from "./components/TagDisplay";
-import { INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "./constants";
+import {
+    BEST_STREAK,
+    INCREMENT_ANIM_MS,
+    SETTINGS_ADULT_WARNING,
+    SETTINGS_CHARACTER_TAGS_ONLY,
+    SETTINGS_RATING_LEVEL,
+    SHOW_ANSWER_TIME_MS,
+} from "./constants";
 import Modal from "./components/Modal";
+import Settings from "./components/Settings";
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (tags.length === 0) return null;
@@ -13,34 +21,49 @@ function getRandomTag(tags: Tag[]): Tag | null {
 }
 
 export default function Home() {
+    const [showAdultWarning, setShowAdultWarning] = useState(true);
+
+    //game states
     const [allTags, setAllTags] = useState<Tag[]>([]);
-    const [date, setDate] = useState<string | null>(null);
     const [leftTag, setLeftTag] = useState<Tag | null>(null);
     const [rightTag, setRightTag] = useState<Tag | null>(null);
-
+    const [date, setDate] = useState<string | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
-    const [showAdultWarning, setShowAdultWarning] = useState(true);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
 
+    //settings
     const [ratingLevel, setRatingLevel] = useState<RatingLevel>("Safe");
+    const [characterTagsOnly, setCharacterTagsOnly] = useState(false);
+
+    const filteredTags = useMemo(() => {
+        if (characterTagsOnly) {
+            return allTags.filter((tag) => tag.category === 4);
+        }
+        return allTags;
+    }, [allTags, characterTagsOnly]);
 
     useEffect(() => {
         //get options
-        const savedRatingLevel = localStorage.getItem("ratingLevel") as RatingLevel;
+        const savedRatingLevel = localStorage.getItem(SETTINGS_RATING_LEVEL) as RatingLevel;
         if (savedRatingLevel) {
             setRatingLevel(savedRatingLevel);
         }
 
-        const adultWarning = localStorage.getItem("adultWarningAccept");
-        // if (adultWarning) {
-        //     setShowAdultWarning(false);
-        // }
+        const characterTagsSetting = localStorage.getItem(SETTINGS_CHARACTER_TAGS_ONLY);
+        if (characterTagsSetting === "true") {
+            setCharacterTagsOnly(true);
+        }
+
+        const adultWarning = localStorage.getItem(SETTINGS_ADULT_WARNING);
+        if (adultWarning) {
+            setShowAdultWarning(false);
+        }
 
         //get best score
-        const bestStreak = localStorage.getItem("bestStreak");
+        const bestStreak = localStorage.getItem(BEST_STREAK);
         if (bestStreak && !isNaN(parseInt(bestStreak))) {
             setBestStreak(parseInt(bestStreak));
         }
@@ -50,13 +73,17 @@ export default function Home() {
             .then((res) => res.json())
             .then((tagsResponse: TagResponse) => {
                 setDate(tagsResponse.date);
+                const filteredTags =
+                    characterTagsSetting === "true"
+                        ? tagsResponse.tags.filter((tag) => tag.category === 4)
+                        : tagsResponse.tags;
                 setAllTags(tagsResponse.tags);
-                const newLeftTag = getRandomTag(tagsResponse.tags);
-                let newRightTag = getRandomTag(tagsResponse.tags);
+                const newLeftTag = getRandomTag(filteredTags);
+                let newRightTag = getRandomTag(filteredTags);
 
-                if (tagsResponse.tags.length > 1) {
+                if (filteredTags.length > 1) {
                     while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-                        newRightTag = getRandomTag(tagsResponse.tags);
+                        newRightTag = getRandomTag(filteredTags);
                     }
                 }
 
@@ -69,10 +96,6 @@ export default function Home() {
             })
             .catch((error) => console.error("Failed to fetch tags:", error));
     }, []);
-
-    useEffect(() => {
-        localStorage.setItem("ratingLevel", ratingLevel);
-    }, [ratingLevel]);
 
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
@@ -112,11 +135,11 @@ export default function Home() {
                 setCurrentStreak((prev) => prev + 1);
                 if (currentStreak + 1 > bestStreak) {
                     setBestStreak(currentStreak + 1);
-                    localStorage.setItem("bestStreak", (currentStreak + 1).toString());
+                    localStorage.setItem(BEST_STREAK, (currentStreak + 1).toString());
                 }
 
                 setLeftTag(rightTag);
-                const newRightTag = getRandomTag(allTags);
+                const newRightTag = getRandomTag(filteredTags);
                 setRightTag(newRightTag);
                 if (rightTag) {
                     setAnimatedCount(0);
@@ -134,27 +157,34 @@ export default function Home() {
     const handleAdultWarning = (selectedChoice: boolean) => {
         if (selectedChoice) {
             setShowAdultWarning(false);
-            localStorage.setItem("adultWarningAccept", "true");
+            localStorage.setItem(SETTINGS_ADULT_WARNING, "true");
         } else {
             window.location.href = "https://google.com";
         }
     };
 
-    const handleTryAgain = () => {
+    const restartRound = (newCharacterTagsOnly?: boolean) => {
+        const useCharacterFilter = typeof newCharacterTagsOnly === "boolean" ? newCharacterTagsOnly : characterTagsOnly;
+        const currentFilteredTags = useCharacterFilter ? allTags.filter((tag) => tag.category === 4) : allTags;
+
         setCurrentStreak(0);
         setShowGameOverModal(false);
         setIsRevealed(false);
 
-        const newLeftTag = getRandomTag(allTags);
-        let newRightTag = getRandomTag(allTags);
+        const newLeftTag = getRandomTag(currentFilteredTags);
+        let newRightTag = getRandomTag(currentFilteredTags);
 
-        if (allTags.length > 1) {
+        if (currentFilteredTags.length > 1) {
             while (newLeftTag && newRightTag && newRightTag.name === newLeftTag.name) {
-                newRightTag = getRandomTag(allTags);
+                newRightTag = getRandomTag(currentFilteredTags);
             }
         }
         setLeftTag(newLeftTag);
         setRightTag(newRightTag);
+    };
+
+    const toggleCharacters = (value: boolean) => {
+        setCharacterTagsOnly(value);
     };
 
     const getCategoryName = (category: number) => {
@@ -222,22 +252,13 @@ export default function Home() {
                         <span>Best: {bestStreak}</span>
                     </div>
                 </div>
-                <div className="flex flex-col mt-4 md:absolute md:top-4 md:right-4 md:mt-0">
-                    <label htmlFor="rating-select" className="text-center md:text-left md:pr-[12px]">
-                        Include Ratings:
-                    </label>
-                    <select
-                        id="rating-select"
-                        value={ratingLevel}
-                        onChange={(e) => setRatingLevel(e.target.value as RatingLevel)}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    >
-                        <option value="No Images">No Images</option>
-                        <option value="Safe">Safe</option>
-                        <option value="Questionable">Questionable</option>
-                        <option value="Explicit">Explicit</option>
-                    </select>
-                </div>
+                <Settings
+                    ratingLevel={ratingLevel}
+                    setRatingLevel={setRatingLevel}
+                    characterTagsOnly={characterTagsOnly}
+                    toggleCharacters={toggleCharacters}
+                    currentStreak={currentStreak}
+                />
             </header>
 
             <div className={`text-center text-2xl md:text-4xl py-5`}>
@@ -246,7 +267,7 @@ export default function Home() {
                     <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
                     <h1 className="text-lg">You guessed incorrectly!</h1>
                     <button
-                        onClick={handleTryAgain}
+                        onClick={() => restartRound()}
                         className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
                     >
                         Play Again
@@ -257,7 +278,7 @@ export default function Home() {
             <main className="flex flex-col text-center gap-4 w-full items-stretch rounded-xl">
                 <div className={`flex flex-col sm:flex-row gap-4 h-full w-full items-center rounded-xl`}>
                     {!leftTag || !rightTag ? (
-                        <div className="flex items-center justify-center min-h-screen">Loading tags...</div>
+                        <div className="flex items-center justify-center text-center mx-auto">Loading tags...</div>
                     ) : (
                         <>
                             <TagDisplay

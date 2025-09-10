@@ -49,3 +49,11 @@ export interface ModalProps {
     onClose: () => void;
     children: ReactNode;
 }
+
+export interface SettingsProps {
+    ratingLevel: RatingLevel;
+    setRatingLevel: React.Dispatch<React.SetStateAction<RatingLevel>>;
+    characterTagsOnly: boolean;
+    toggleCharacters: (value: boolean) => void;
+    currentStreak: number;
+}
