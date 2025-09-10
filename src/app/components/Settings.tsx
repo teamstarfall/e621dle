@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { RatingLevel, SettingsProps } from "../interfaces";
 import { SETTINGS_CHARACTER_TAGS_ONLY, SETTINGS_RATING_LEVEL } from "../constants";
 
-export default function Settings({
-    ratingLevel,
-    setRatingLevel,
-    characterTagsOnly,
-    toggleCharacters,
-    currentStreak,
-}: SettingsProps) {
+export default function Settings({ ratingLevel, setRatingLevel, characterTagsOnly, toggleCharacters }: SettingsProps) {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +47,6 @@ export default function Settings({
                     id="character-toggle"
                     checked={characterTagsOnly || false}
                     onChange={handleToggle}
-                    disabled={currentStreak > 0}
                     className="disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 {showTooltip && (

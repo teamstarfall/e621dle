@@ -33,17 +33,18 @@ export default function Home() {
     const [currentStreak, setCurrentStreak] = useState(0);
     const [bestStreak, setBestStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
+    const [showCharactersOnly, setShowCharactersOnly] = useState(false);
 
     //settings
     const [ratingLevel, setRatingLevel] = useState<RatingLevel>("Safe");
     const [characterTagsOnly, setCharacterTagsOnly] = useState(false);
 
     const filteredTags = useMemo(() => {
-        if (characterTagsOnly) {
+        if (showCharactersOnly) {
             return allTags.filter((tag) => tag.category === 4);
         }
         return allTags;
-    }, [allTags, characterTagsOnly]);
+    }, [allTags, showCharactersOnly]);
 
     useEffect(() => {
         //get options
@@ -55,6 +56,7 @@ export default function Home() {
         const characterTagsSetting = localStorage.getItem(SETTINGS_CHARACTER_TAGS_ONLY);
         if (characterTagsSetting === "true") {
             setCharacterTagsOnly(true);
+            setShowCharactersOnly(true);
         }
 
         const adultWarning = localStorage.getItem(SETTINGS_ADULT_WARNING);
@@ -163,14 +165,13 @@ export default function Home() {
         }
     };
 
-    const restartRound = (newCharacterTagsOnly?: boolean) => {
-        const useCharacterFilter = typeof newCharacterTagsOnly === "boolean" ? newCharacterTagsOnly : characterTagsOnly;
-        const currentFilteredTags = useCharacterFilter ? allTags.filter((tag) => tag.category === 4) : allTags;
-
+    const restartRound = () => {
+        setShowCharactersOnly(characterTagsOnly);
         setCurrentStreak(0);
         setShowGameOverModal(false);
         setIsRevealed(false);
 
+        const currentFilteredTags = characterTagsOnly ? allTags.filter((tag) => tag.category === 4) : allTags;
         const newLeftTag = getRandomTag(currentFilteredTags);
         let newRightTag = getRandomTag(currentFilteredTags);
 
@@ -238,6 +239,7 @@ export default function Home() {
             </div>
         );
     }
+
     return (
         <div
             id="container"
@@ -257,7 +259,6 @@ export default function Home() {
                     setRatingLevel={setRatingLevel}
                     characterTagsOnly={characterTagsOnly}
                     toggleCharacters={toggleCharacters}
-                    currentStreak={currentStreak}
                 />
             </header>
 

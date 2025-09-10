@@ -55,5 +55,4 @@ export interface SettingsProps {
     setRatingLevel: React.Dispatch<React.SetStateAction<RatingLevel>>;
     characterTagsOnly: boolean;
     toggleCharacters: (value: boolean) => void;
-    currentStreak: number;
 }
