@@ -3,13 +3,14 @@ name: Generate and Commit Tags
 on:
     workflow_dispatch:
     schedule:
-        - cron: "0 8 * * 0"
+        - cron: "0 12 * * 0"
     push:
         branches:
             - main
 
 jobs:
     generate-tags:
+        if: github.actor != 'github-actions[bot]'
         runs-on: ubuntu-latest
 
         permissions:
