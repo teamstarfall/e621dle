@@ -1,44 +1,45 @@
 name: Generate and Commit Tags
 
 on:
-  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
-  # You can also run it on a schedule
-  schedule:
-    - cron: '0 8 * * 0' # Runs at 8 AM UTC every Sunday
+    workflow_dispatch:
+    schedule:
+        - cron: "0 8 * * 0"
+    push:
+        branches:
+            - main
 
 jobs:
-  generate-tags:
-    runs-on: ubuntu-latest
+    generate-tags:
+        runs-on: ubuntu-latest
 
-    # These permissions are needed to allow the action to commit to the repository
-    permissions:
-      contents: write
+        permissions:
+            contents: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Using a recent LTS version of Node.js
-          cache: 'npm'
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci # 'ci' is typically faster and safer for automated environments
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Run tag generation script
-        run: npm run generate-tags
+            - name: Run tag generation script
+              run: npm run generate-tags
 
-      - name: Commit and push if changed
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add resources/
-          # Check if there are staged changes and commit if there are
-          if ! git diff --staged --quiet; then
-            git commit -m "chore(data): update generated tags"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+            - name: Commit and push if changed
+              run: |
+                  git config --global user.name 'github-actions[bot]'
+                  git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+                  git add resources/
+                  # Check if there are staged changes and commit if there are
+                  if ! git diff --staged --quiet; then
+                    git commit -m "chore(data): update generated tags"
+                    git push
+                  else
+                    echo "No changes to commit."
+                  fi
