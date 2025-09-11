@@ -102,8 +102,6 @@ const blacklist = [
 async function generateTags() {
     const tags = new Map();
     var begin;
-    console.log("Renaming tags.json file...");
-    renameOldTagsFile();
 
     console.log("Retrieving files...");
     begin = Date.now();
@@ -134,23 +132,6 @@ async function generateTags() {
     saveTagsAsJson(topTags);
 }
 
-function renameOldTagsFile() {
-    const oldPath = path.join(__dirname, "../resources/tags.json");
-    const newPath = path.join(__dirname, "../resources/tags-old.json");
-
-    try {
-        // Check if the file exists before attempting to rename
-        if (fs.existsSync(oldPath)) {
-            fs.renameSync(oldPath, newPath);
-            console.log(`	Successfully renamed ${oldPath} to ${newPath}`);
-        } else {
-            console.log(`	${oldPath} does not exist. Nothing to rename.`);
-        }
-    } catch (error) {
-        console.error(`	Error renaming file: ${error}`);
-    }
-}
-
 async function retrieveFiles() {
     try {
         for (const f of files) {
@@ -177,7 +158,11 @@ async function downloadAndExtract(url, outputPath) {
         https
             .get(url, (response) => {
                 if (response.statusCode !== 200) {
-                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+                    reject(
+                        new Error(
+                            `Failed to get '${url}' (${response.statusCode})`
+                        )
+                    );
                     return;
                 }
 
@@ -264,15 +249,23 @@ async function parsePosts(topTags) {
                     if (!targetTagsSet.has(tagName)) continue;
 
                     const tag = topTagsMap.get(tagName);
-                    if (!tag || ([4, 5].includes(tag.category) && !postTags.includes("solo"))) continue;
+                    if (
+                        !tag ||
+                        ([4, 5].includes(tag.category) &&
+                            !postTags.includes("solo"))
+                    )
+                        continue;
 
                     const ratingKey = ratingMap[rating.toLowerCase()];
-                    if (!ratingKey || tag.images[ratingKey].score > score) continue;
+                    if (!ratingKey || tag.images[ratingKey].score > score)
+                        continue;
 
                     const existingImage = usedImages.get(url);
                     if (existingImage && existingImage.tag.name !== tag.name) {
                         if (score > existingImage.score) {
-                            existingImage.tag.resetPreview(existingImage.ratingKey);
+                            existingImage.tag.resetPreview(
+                                existingImage.ratingKey
+                            );
                             tag.updatePreview(rating, score, url, fileExt);
                             usedImages.set(url, { tag, score, ratingKey });
                         }
@@ -296,7 +289,11 @@ function saveTagsAsJson(topTags) {
     };
 
     try {
-        fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), "utf-8");
+        fs.writeFileSync(
+            outputPath,
+            JSON.stringify(outputData, null, 2),
+            "utf-8"
+        );
         console.log(`Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
         console.error("Failed to save tags as JSON:", err);
@@ -309,7 +306,10 @@ function isNumber(str) {
 }
 
 function createImageUrl(md5) {
-    return `https://static1.e621.net/data/sample/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`;
+    return `https://static1.e621.net/data/sample/${md5.substring(
+        0,
+        2
+    )}/${md5.substring(2, 4)}/${md5}.jpg`;
 }
 
 function getTopTagsByCategory(tagsCollection, category, limit) {
@@ -349,7 +349,10 @@ class Tag {
         const ratingKey = ratingMap[rating.toLowerCase()];
         if (!ratingKey) return;
 
-        if (this.images[ratingKey].score === null || score > this.images[ratingKey].score) {
+        if (
+            this.images[ratingKey].score === null ||
+            score > this.images[ratingKey].score
+        ) {
             this.images[ratingKey] = { url, score, fileExt };
         }
     }
