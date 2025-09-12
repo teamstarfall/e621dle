@@ -22,10 +22,13 @@ const ImageCard = memo(function ImageCard({ tag, ratingLevel }: { tag: Tag; rati
         }
 
         for (const rating of ratingsToShow) {
-            const url = tag.images[rating]?.url;
-            if (url) {
-                potential.push(url);
-                potential.push(url.replace("/sample/", "/").replace(".jpg", "." + tag.images[rating]?.fileExt));
+            const md5 = tag.images[rating]?.md5;
+            const fileExt = tag.images[rating]?.fileExt;
+            if (md5) {
+                potential.push(`https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`);
+                potential.push(
+                    `https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.${fileExt}`
+                );
             }
         }
         return potential;
@@ -56,7 +59,7 @@ const ImageCard = memo(function ImageCard({ tag, ratingLevel }: { tag: Tag; rati
                     onError={handleError}
                 />
             ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center">
+                <div className="w-full h-full flex flex-col items-center justify-center gap-6">
                     <div className="relative flex items-center justify-center">
                         <Image
                             src="/no-image.png"

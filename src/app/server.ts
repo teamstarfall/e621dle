@@ -15,24 +15,16 @@ export async function fetchTags() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             if (error.code === "ENOENT") {
-                console.log(
-                    "Local tags.json not found, fetching from remote..."
-                );
+                console.log("Local tags.json not found, fetching from remote...");
                 const response = await fetch(
                     "https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/tags.json",
                     { cache: "no-store" }
                 );
                 if (!response.ok) {
-                    throw new Error(
-                        `Failed to fetch tags.json from fallback URL`
-                    );
+                    throw new Error(`Failed to fetch tags.json from fallback URL`);
                 }
 
-                await writeFile(
-                    filePath,
-                    JSON.stringify(JSON.stringify(response.json), null, 2),
-                    "utf-8"
-                );
+                await writeFile(filePath, JSON.stringify(JSON.stringify(response.json), null, 2), "utf-8");
 
                 data = await response.json();
             } else {
@@ -40,14 +32,11 @@ export async function fetchTags() {
             }
         }
     } else {
-        const response = await fetch(
-            "https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/tags.json",
-            { cache: "no-store" }
-        );
+        const response = await fetch("https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/tags.json", {
+            cache: "no-store",
+        });
         if (!response.ok) {
-            throw new Error(
-                `Failed to fetch tags.json from ${process.env.TAGS_URL}`
-            );
+            throw new Error(`Failed to fetch tags.json from ${process.env.TAGS_URL}`);
         }
         data = await response.json();
     }

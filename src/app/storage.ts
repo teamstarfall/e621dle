@@ -1,9 +1,4 @@
-import {
-    useCallback,
-    useSyncExternalStore,
-    type SetStateAction,
-    type Dispatch,
-} from "react";
+import { useCallback, useSyncExternalStore, type SetStateAction, type Dispatch } from "react";
 import {
     SETTINGS_ADULT_WARNING,
     SETTINGS_CHARACTER_TAGS_ONLY,
@@ -36,15 +31,11 @@ export function useLocalStorage<T extends string | number | boolean>(
     key: string,
     defaultValue: T,
     serialize: (value: T) => string = JSON.stringify,
-    deserialize: (value: string) => T = JSON.parse,
+    deserialize: (value: string) => T = JSON.parse
 ) {
     // if we don't memoize these functions react will re-subscribe every render
 
-    const subscribe = useCallback(
-        (onStoreChange: () => void) =>
-            subscribeToLocalStorage(key, onStoreChange),
-        [key],
-    );
+    const subscribe = useCallback((onStoreChange: () => void) => subscribeToLocalStorage(key, onStoreChange), [key]);
 
     const snapshot = useCallback(() => {
         const snapshot = localStorage.getItem(key);
@@ -57,18 +48,12 @@ export function useLocalStorage<T extends string | number | boolean>(
 
     const serverSnapshot = useCallback(() => null, []);
 
-    const value = useSyncExternalStore<T | null>(
-        subscribe,
-        snapshot,
-        serverSnapshot,
-    );
+    const value = useSyncExternalStore<T | null>(subscribe, snapshot, serverSnapshot);
 
     const updater = useCallback<Dispatch<SetStateAction<T>>>(
         (next: T | ((prev: T) => T)) => {
             const oldValue = serialize(value ?? defaultValue);
-            const newValue = serialize(
-                typeof next === "function" ? next(value ?? defaultValue) : next,
-            );
+            const newValue = serialize(typeof next === "function" ? next(value ?? defaultValue) : next);
 
             localStorage.setItem(key, newValue);
 
@@ -80,37 +65,28 @@ export function useLocalStorage<T extends string | number | boolean>(
                     key,
                     newValue,
                     oldValue,
-                }),
+                })
             );
         },
-        [key, serialize, value, defaultValue],
+        [key, serialize, value, defaultValue]
     );
 
     return [value, updater] as const;
 }
 
 export function useSettings() {
-    const [showAdultWarning, setShowAdultWarning] = useLocalStorage<boolean>(
-        SETTINGS_ADULT_WARNING,
-        true,
-    );
+    const [showAdultWarning, setShowAdultWarning] = useLocalStorage<boolean>(SETTINGS_ADULT_WARNING, true);
 
     const [ratingLevel, setRatingLevel] = useLocalStorage<RatingLevel>(
         SETTINGS_RATING_LEVEL,
         "Safe",
         (v) => v,
-        (v) => v as RatingLevel,
+        (v) => v as RatingLevel
     );
 
-    const [characterTagsOnly, setCharacterTagsOnly] = useLocalStorage<boolean>(
-        SETTINGS_CHARACTER_TAGS_ONLY,
-        false,
-    );
+    const [characterTagsOnly, setCharacterTagsOnly] = useLocalStorage<boolean>(SETTINGS_CHARACTER_TAGS_ONLY, false);
 
-    const [pause, setPause] = useLocalStorage<boolean>(
-        SETTINGS_PAUSE_BEFORE_NEXT,
-        false,
-    );
+    const [pause, setPause] = useLocalStorage<boolean>(SETTINGS_PAUSE_BEFORE_NEXT, false);
 
     return {
         showAdultWarning,

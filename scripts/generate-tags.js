@@ -6,6 +6,7 @@ import { promisify } from "util";
 import path from "path";
 import { parse } from "csv-parse";
 import { fileURLToPath } from "url";
+import { encode } from "@msgpack/msgpack";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -238,14 +239,13 @@ async function parsePosts(topTags) {
                 )
                     return;
 
+                const id = line[0];
                 const md5 = line[3];
                 const rating = line[5]; // explicit, questionable, safe
                 const fileExt = line[11];
                 const score = parseInt(line[23], 10);
 
                 if (!["png", "jpg"].includes(fileExt)) return;
-
-                const url = createImageUrl(md5);
 
                 const postTags = line[8].split(/\s+/);
                 for (let i = 0; i < postTags.length; i++) {
@@ -268,18 +268,18 @@ async function parsePosts(topTags) {
                     if (!ratingKey || tag.images[ratingKey].score > score)
                         continue;
 
-                    const existingImage = usedImages.get(url);
+                    const existingImage = usedImages.get(md5);
                     if (existingImage && existingImage.tag.name !== tag.name) {
                         if (score > existingImage.score) {
                             existingImage.tag.resetPreview(
                                 existingImage.ratingKey
                             );
-                            tag.updatePreview(rating, score, url, fileExt);
-                            usedImages.set(url, { tag, score, ratingKey });
+                            tag.updatePreview(id, rating, score, md5, fileExt);
+                            usedImages.set(md5, { id, tag, score, ratingKey });
                         }
                     } else {
-                        tag.updatePreview(rating, score, url, fileExt);
-                        usedImages.set(url, { tag, score, ratingKey });
+                        tag.updatePreview(id, rating, score, md5, fileExt);
+                        usedImages.set(md5, { tag, score, ratingKey });
                     }
                 }
             })
@@ -290,6 +290,7 @@ async function parsePosts(topTags) {
 
 function saveTagsAsJson(topTags) {
     const outputPath = path.join(__dirname, "../resources/tags.json");
+    const outputMinPath = path.join(__dirname, "../resources/tags.min.json");
 
     const outputData = {
         date: getYesterdayDate(),
@@ -302,6 +303,7 @@ function saveTagsAsJson(topTags) {
             JSON.stringify(outputData, null, 2),
             "utf-8"
         );
+        fs.writeFileSync(outputMinPath, encode(outputData), "utf-8");
         console.log(`Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
         console.error("Failed to save tags as JSON:", err);
@@ -311,13 +313,6 @@ function saveTagsAsJson(topTags) {
 // helper functions
 function isNumber(str) {
     return !isNaN(str) && str.trim() !== "";
-}
-
-function createImageUrl(md5) {
-    return `https://static1.e621.net/data/sample/${md5.substring(
-        0,
-        2
-    )}/${md5.substring(2, 4)}/${md5}.jpg`;
 }
 
 function getTopTagsByCategory(tagsCollection, category, limit) {
@@ -346,13 +341,18 @@ class Tag {
         this.category = category;
         this.count = count;
         this.images = {
-            explicit: { url: null, score: -Infinity, fileExt: null },
-            questionable: { url: null, score: -Infinity, fileExt: null },
-            safe: { url: null, score: -Infinity, fileExt: null },
+            explicit: { id: null, md5: null, score: -Infinity, fileExt: null },
+            questionable: {
+                id: null,
+                md5: null,
+                score: -Infinity,
+                fileExt: null,
+            },
+            safe: { id: null, md5: null, score: -Infinity, fileExt: null },
         };
     }
 
-    updatePreview(rating, score, url, fileExt) {
+    updatePreview(id, rating, score, md5, fileExt) {
         const ratingMap = { e: "explicit", q: "questionable", s: "safe" };
         const ratingKey = ratingMap[rating.toLowerCase()];
         if (!ratingKey) return;
@@ -361,11 +361,16 @@ class Tag {
             this.images[ratingKey].score === null ||
             score > this.images[ratingKey].score
         ) {
-            this.images[ratingKey] = { url, score, fileExt };
+            this.images[ratingKey] = { id, md5, score, fileExt };
         }
     }
 
     resetPreview(ratingKey) {
-        this.images[ratingKey] = { url: null, score: -Infinity, fileExt: null };
+        this.images[ratingKey] = {
+            id: null,
+            md5: null,
+            score: -Infinity,
+            fileExt: null,
+        };
     }
 }
