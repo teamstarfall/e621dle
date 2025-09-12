@@ -88,6 +88,7 @@ const blacklist = [
     "drowning",
     "cbt",
     "lolicon",
+    "incest",
 ];
 
 (async () => {
