@@ -4,6 +4,9 @@ on:
     workflow_dispatch:
     schedule:
         - cron: "0 12 * * 0"
+    push:
+        paths:
+            - "scripts/generate-tags.js"
 
 jobs:
     generate-tags:
@@ -14,8 +17,10 @@ jobs:
             contents: write
 
         steps:
-            - name: Checkout repository
+            - name: Checkout data branch
               uses: actions/checkout@v4
+              with:
+                  ref: data
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
