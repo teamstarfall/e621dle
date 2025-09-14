@@ -46,8 +46,8 @@ jobs:
                   git worktree add data-branch data || git worktree add data-branch -b data origin/dev
 
                   # copy resources into the data branch
-                  rm -rf data-branch/resources
-                  cp -r resources data-branch/
+                  mkdir -p data-branch/resources
+                  cp -r resources/* data-branch/resources/
 
                   cd data-branch
                   git add resources
