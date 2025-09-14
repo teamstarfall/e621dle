@@ -42,7 +42,7 @@ export function useLocalStorage<T extends string | number | boolean>(
         if (snapshot === null) {
             return defaultValue;
         }
-        console.log(key, snapshot);
+
         return deserialize(snapshot);
     }, [key, deserialize, defaultValue]);
 

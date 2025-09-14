@@ -8,7 +8,7 @@ const ImageCard = memo(function ImageCard({
     tagName,
     handleError,
 }: {
-    currentSrc: string;
+    currentSrc: { url: string; score: number | undefined };
     tagName: string;
     handleError: () => void;
 }) {
@@ -16,8 +16,8 @@ const ImageCard = memo(function ImageCard({
         <>
             {currentSrc ? (
                 <Image
-                    key={currentSrc}
-                    src={currentSrc}
+                    key={currentSrc.url}
+                    src={currentSrc.url}
                     alt={tagName}
                     unoptimized
                     fill

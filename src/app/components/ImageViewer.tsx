@@ -3,7 +3,7 @@ import Image from "next/image";
 interface ImageViewerProps {
     isRevealed: boolean;
     onClose: () => void;
-    imageUrl: string;
+    imageUrl: string | null;
     tagName: string;
 }
 
@@ -22,7 +22,7 @@ export default function ImageViewer({ isRevealed, onClose, imageUrl, tagName }: 
                     <div className="relative h-full">
                         <Image
                             key={imageUrl}
-                            src={imageUrl}
+                            src={imageUrl || "none"}
                             alt={tagName}
                             unoptimized
                             fill

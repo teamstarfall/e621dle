@@ -317,7 +317,7 @@ function shouldProcessPost(line) {
         line.length !== 29 ||
         !isNumber(line[0]) ||
         line[20] === "t" || // post is deleted
-        ["png", "jpg", "gif"].includes(line[11]) ||
+        !["png", "jpg", "gif"].includes(line[11]) ||
         parseInt(line[23], 10) < 0
     );
 }

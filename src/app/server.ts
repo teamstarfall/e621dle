@@ -24,7 +24,7 @@ export async function fetchTags() {
     let data: TagResponse;
 
     if (currentEnvironment === "local") {
-        const filePath = path.join(process.cwd(), "resources", "tags.json");
+        const filePath = path.join(process.cwd(), "resources", "tags.dev.json");
         try {
             const fileContents = await fs.readFile(filePath, "utf8");
             data = JSON.parse(fileContents);
@@ -37,7 +37,7 @@ export async function fetchTags() {
                     { cache: "no-store" }
                 );
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch tags.json from fallback URL`);
+                    throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
                 }
 
                 await writeFile(filePath, JSON.stringify(JSON.stringify(response.json), null, 2), "utf-8");
