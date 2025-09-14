@@ -1,12 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, useMemo, use } from "react";
 import { Tag, GameProps } from "../interfaces";
 import TagCard from "./TagCard";
-import { BEST_STREAK, INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS } from "../constants";
+import { BEST_STREAK, INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
 import Modal from "../components/Modal";
-import Settings from "../components/Settings";
 import { useLocalStorage, useSettings } from "../storage";
 
 function getRandomTag(tags: Tag[]): Tag | null {
@@ -40,6 +38,9 @@ function getCategoryName(category: number) {
     }
 }
 
+import Header from "./Header";
+import Footer from "./Footer";
+
 export default function Game({ posts }: GameProps) {
     const { tags, date } = use(posts);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
@@ -60,10 +61,11 @@ export default function Game({ posts }: GameProps) {
     const [leftTag, setLeftTag] = useState<Tag | null>(null);
     const [rightTag, setRightTag] = useState<Tag | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
-    const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [showContinue, setShowContinue] = useState(false);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [animatedCount, setAnimatedCount] = useState(0);
+    const [gameOver, setGameOver] = useState(false);
+    const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [gameMode, setGameMode] = useState<"Daily" | "Endless">("Daily");
 
     useEffect(() => {
@@ -139,6 +141,7 @@ export default function Game({ posts }: GameProps) {
         } else {
             setTimeout(() => {
                 setShowGameOverModal(true);
+                setGameOver(true);
             }, SHOW_ANSWER_TIME_MS);
         }
         setIsRevealed(true);
@@ -149,6 +152,7 @@ export default function Game({ posts }: GameProps) {
         setCurrentStreak(0);
         setShowGameOverModal(false);
         setIsRevealed(false);
+        setGameOver(false);
 
         const currentFilteredTags = characterTagsOnly ? tags.filter((tag) => tag.category === 4) : tags;
         const newLeftTag = getRandomTag(currentFilteredTags);
@@ -198,52 +202,14 @@ export default function Game({ posts }: GameProps) {
 
     return (
         <div id="container" className="font-sans items-center flex flex-col min-h-screen max-w-[1200px] mx-auto w-full">
-            <header className="grid grid-cols-[1fr_auto_1fr] items-center mt-8 w-full">
-                <div className="justify-self-start flex flex-col items-center">
-                    <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-25 md:w-50 h-auto" />
-                    <div className="flex rounded-lg shadow-sm mt-2" role="group">
-                        <button
-                            type="button"
-                            className={`px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-l-lg hover:bg-gray-600 focus:z-10 focus:ring-2 focus:ring-gray-500 ${
-                                gameMode === "Endless" ? "bg-gray-900" : ""
-                            }`}
-                            onClick={() => setGameMode("Endless")}
-                        >
-                            Endless
-                        </button>
-                        <button
-                            type="button"
-                            className={`px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-r-lg hover:bg-gray-600 focus:z-10 focus:ring-2 focus:ring-gray-500 ${
-                                gameMode === "Daily" ? "bg-gray-900" : ""
-                            }`}
-                            onClick={() => setGameMode("Daily")}
-                        >
-                            Daily
-                        </button>
-                    </div>
-                </div>
-                <div className="justify-self-center flex flex-col items-center">
-                    <div className={`text-center text-2xl md:text-3xl pb-4`}>
-                        <span className="hidden sm:inline font-bold">Which tag has more posts?</span>
-                    </div>
-                    <div className="flex flex-row items-center px-4 py-2 border-1 rounded-xl bg-[#071e32] justify-items-center">
-                        <span className="flex flex-row text-center justify-center items-center">
-                            <span className="font-bold whitespace-nowrap">Current</span>
-                            <span className="font-bold text-[32px] mx-2">{currentStreak}</span>
-                        </span>
-                        <div className="h-8 w-px bg-gray-400 mx-2" />
-                        <span className="flex flex-row text-center justify-center items-center">
-                            <span className="font-bold whitespace-nowrap">Best</span>
-                            <span className="font-bold text-[32px] mx-2">{bestStreak}</span>
-                        </span>
-                    </div>
-                </div>
-                <div className="justify-self-end">
-                    <Settings />
-                </div>
-            </header>
+            <Header
+                gameMode={gameMode}
+                setGameMode={setGameMode}
+                currentStreak={currentStreak}
+                bestStreak={bestStreak ?? 0}
+            />
 
-            <main className="flex flex-col text-center gap-4 w-full rounded-xl my-12">
+            <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
                 <div
                     className={`flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
                 >
@@ -251,6 +217,7 @@ export default function Game({ posts }: GameProps) {
                         <div className="flex items-center justify-center text-center mx-auto">Loading tags...</div>
                     ) : (
                         <>
+                            <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
                             <TagCard
                                 tag={leftTag}
                                 isRevealed={isRevealed}
@@ -260,8 +227,7 @@ export default function Game({ posts }: GameProps) {
                                 ratingLevel={ratingLevel ?? "Safe"}
                             />
                             <div className="font-bold sm:my-auto sm:px-4 justify-self-center">
-                                <span className="text-3xl hidden sm:inline py-4">or</span>
-                                <span className="inline sm:hidden text-lg">Which tag has more posts?</span>
+                                <span className="text-3xl p-0 sm:py-4">or</span>
                             </div>
                             <TagCard
                                 tag={rightTag}
@@ -277,7 +243,7 @@ export default function Game({ posts }: GameProps) {
                 </div>
             </main>
 
-            {pause && (
+            {pause && !gameOver && (
                 <div className="flex flex-row gap-4 w-full items-center justify-center">
                     <button
                         disabled={!showContinue}
@@ -290,47 +256,21 @@ export default function Game({ posts }: GameProps) {
                     </button>
                 </div>
             )}
-
-            <footer className="grid grid-cols-3 text-center items-center justify-items-center w-full py-3 my-8 gap-1">
-                <span className="justify-self-start">
-                    Inspired by{" "}
-                    <a className="underline" href="https://rule34dle.vercel.app/" target="_blank" rel="noopener noreferrer">
-                        Rule34dle
-                    </a>
-                    {" | "}
-                    <a
-                        className="underline"
-                        href="https://github.com/teamstarfall/e621dle"
-                        target="_blank"
-                        rel="noopener noreferrer"
+            {gameOver && (
+                <div className="flex flex-row gap-4 w-full items-center justify-center">
+                    <button
+                        disabled={!gameOver}
+                        className="px-6 py-3 rounded-md ring ring-white/50 hover:not-disabled:ring-2 hover:not-disabled:ring-white text-xl font-bold  bg-[#1f3c67] disabled:bg-[#071e32] disabled:text-white/50 disabled:ring-white/15 disabled:cursor-not-allowed transition-discrete transition-all"
+                        onClick={() => {
+                            restartRound();
+                        }}
                     >
-                        Github Repo
-                    </a>
-                </span>
-                <span className="flex flex-col justify-self-center">
-                    <span>
-                        Made with 💚💙 by <b>Team Starfall</b>
-                    </span>
-                    <span>
-                        (
-                        <a className="underline" href="https://angelolz.one" target="_blank" rel="noopener noreferrer">
-                            angelolz
-                        </a>
-                        {" + "}
-                        <a
-                            className="underline"
-                            href="https://twitter.com/azuretoast"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            AzureToast
-                        </a>
-                        )
-                    </span>
-                </span>
+                        Play Again
+                    </button>
+                </div>
+            )}
 
-                {date && <span className="justify-self-end">Data is based on {date}.</span>}
-            </footer>
+            <Footer date={date} />
             <Modal isRevealed={showGameOverModal} onClose={() => setShowGameOverModal(false)}>
                 <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
                 <h1 className="text-lg">You guessed incorrectly!</h1>

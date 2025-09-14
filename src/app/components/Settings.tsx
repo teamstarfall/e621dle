@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useSettings } from "../storage";
 
 export default function Settings() {
-    const [showTooltip, setShowTooltip] = useState(false);
     const [hoveredRating, setHoveredRating] = useState<string | null>(null);
 
     const { ratingLevel, setRatingLevel, characterTagsOnly, setCharacterTagsOnly, pause, setPause } = useSettings();
@@ -10,10 +9,6 @@ export default function Settings() {
     const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
         const isChecked = e.target.checked;
         setCharacterTagsOnly(isChecked);
-        setShowTooltip(true);
-        setTimeout(() => {
-            setShowTooltip(false);
-        }, 3000); // Tooltip disappears after 3 seconds
     };
 
     return (
@@ -111,7 +106,11 @@ export default function Settings() {
                     </div>
                 </div>
             </div>
-            <div className="relative flex items-center mt-2">
+            <div
+                className="relative flex items-center mt-2"
+                onMouseEnter={() => setHoveredRating("characterSetting")}
+                onMouseLeave={() => setHoveredRating(null)}
+            >
                 <input
                     type="checkbox"
                     id="character-toggle"
@@ -122,11 +121,13 @@ export default function Settings() {
                 <label htmlFor="character-toggle" className="whitespace-nowrap ml-2">
                     Characters Only
                 </label>
-                {showTooltip && (
-                    <div className="absolute bottom-full ml-2 p-2 bg-gray-800 text-white text-xs rounded-md shadow-lg z-10 whitespace-nowrap">
-                        Will apply on next round.
-                    </div>
-                )}
+                <div
+                    className={`absolute bottom-full mb-2 p-2 bg-gray-800 text-white text-xs rounded-md shadow-lg z-10 whitespace-nowrap tooltip-transition ${
+                        hoveredRating === "characterSetting" ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                >
+                    Will apply on next round.
+                </div>
             </div>
             <div className="relative flex items-center mt-2">
                 <input

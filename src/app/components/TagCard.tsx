@@ -53,7 +53,7 @@ export default function TagCard({
     }
 
     return (
-        <span>
+        <div className="w-full">
             <div className="group flex flex-col grow">
                 <button
                     type="button"
@@ -63,7 +63,7 @@ export default function TagCard({
                     onClick={() => handleChoice(choice)}
                 >
                     <span className="flex flex-col">
-                        <span className="font-bold text-[24px]">{tag.name}</span>
+                        <span className="font-bold text-[24px] break-all">{tag.name}</span>
                         <span className="italic text-[14px] leading-0 my-2">{getCategoryName(tag.category)}</span>
                     </span>
 
@@ -82,10 +82,10 @@ export default function TagCard({
                     </div>
                 </button>
             </div>
-            <span className="flex flex-row gap-2 items-center justify-center py-3">
+            <span className="flex flex-row gap-2 items-center justify-center pt-3">
                 <button
                     type="button"
-                    className={`${buttonClasses} p-2 disabled:bg-gray-800 disabled:ring-gray-800 disabled:hover:bg-gray-800 disabled:hover:ring-gray-800 disabled:cursor-not-allowed`}
+                    className={`${buttonClasses} p-2 disabled:opacity-50 disabled:pointer-events-none`}
                     title="View on e621"
                     onClick={() => {
                         if (sourceLink) {
@@ -97,10 +97,15 @@ export default function TagCard({
                     🔗
                 </button>
                 <span>Score: {tag.images[ratingLevel.toLowerCase() as keyof ImagePreviews]?.score || "--"}</span>
-                <button type="button" title="View bigger image" className={`${buttonClasses} p-2 disabled:bg-gray-800 disabled:ring-gray-800 disabled:hover:bg-gray-800 disabled:hover:ring-gray-800 disabled:cursor-not-allowed`} disabled={!sourceLink}>
+                <button
+                    type="button"
+                    title="View bigger image"
+                    className={`${buttonClasses} p-2 disabled:opacity-50 disabled:pointer-events-none`}
+                    disabled={!sourceLink}
+                >
                     🔎
                 </button>
             </span>
-        </span>
+        </div>
     );
 }
