@@ -7,11 +7,13 @@ import path from "path";
 import { parse } from "csv-parse";
 import { fileURLToPath } from "url";
 import { encode } from "@msgpack/msgpack";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pipe = promisify(pipeline);
-
+const branchName = getBranchName();
+const outputFileName = branchName === "main" ? "tags.json" : "tags.dev.json";
 const yesterday = getYesterdayDate();
 const files = [
     {
@@ -113,6 +115,8 @@ async function generateTags() {
     const tags = new Map();
     var begin;
 
+    console.log("Starting process. Current branch name: ", branchName);
+    console.log("Output file name will be: ", outputFileName);
     console.log("Retrieving files...");
     begin = Date.now();
     await retrieveFiles();
@@ -267,8 +271,8 @@ async function parsePosts(topTags) {
 }
 
 function saveTagsAsJson(topTags) {
-    const outputPath = path.join(__dirname, "../resources/tags.json");
-    const outputMinPath = path.join(__dirname, "../resources/tags.min.json");
+    const outputPath = path.join(__dirname, "../resources", outputFileName);
+    const outputMinPath = path.join(__dirname, "../resources", outputFileName.replace(".json", ".min.json"));
 
     const outputData = {
         date: getYesterdayDate(),
@@ -316,6 +320,16 @@ function shouldProcessPost(line) {
         !!["png", "jpg"].includes(line[11]) ||
         parseInt(line[23], 10) < 0
     );
+}
+
+function getBranchName() {
+    try {
+        const branchName = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+        return branchName;
+    } catch (error) {
+        console.error("Error getting branch name:", error);
+        return "unknown";
+    }
 }
 
 // classes
