@@ -1,6 +1,7 @@
 import { TagCardProps as TagCardProps, ImagePreviews } from "../interfaces";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ImageCard from "./ImageCard";
+import ImageViewer from "./ImageViewer";
 
 function AnimatedNumber({
     isRevealed,
@@ -33,6 +34,7 @@ export default function TagCard({
     animatedCount,
     ratingLevel,
 }: TagCardProps) {
+    const [showImageViewer, setShowImageViewer] = useState(false);
     const sourceLink = useMemo(() => {
         if (!tag) {
             return null;
@@ -48,6 +50,46 @@ export default function TagCard({
         return null;
     }, [tag, ratingLevel]);
 
+    const sources = useMemo(() => {
+        if (ratingLevel === "No Images") {
+            return [];
+        }
+
+        const potential = [];
+        const ratingsToShow: (keyof ImagePreviews)[] = [];
+
+        if (ratingLevel === "Safe") {
+            ratingsToShow.push("safe");
+        } else if (ratingLevel === "Questionable") {
+            ratingsToShow.push("questionable", "safe");
+        } else if (ratingLevel === "Explicit") {
+            ratingsToShow.push("explicit", "questionable", "safe");
+        }
+
+        for (const rating of ratingsToShow) {
+            const md5 = tag?.images[rating]?.md5;
+            const fileExt = tag?.images[rating]?.fileExt;
+            if (md5) {
+                potential.push(`https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`);
+                potential.push(
+                    `https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.${fileExt}`
+                );
+            }
+        }
+        return potential;
+    }, [tag, ratingLevel]);
+
+    useEffect(() => {
+        setSourceIndex(0);
+    }, [sources]);
+
+    const handleError = () => {
+        setSourceIndex((prevIndex) => prevIndex + 1);
+    };
+
+    const [sourceIndex, setSourceIndex] = useState(0);
+    const currentSrc = sources[sourceIndex];
+
     if (!tag) {
         return null;
     }
@@ -55,32 +97,33 @@ export default function TagCard({
     return (
         <div className="w-full">
             <div className="group flex flex-col grow">
-                <button
-                    type="button"
-                    className={`flex flex-col gap-[12px] w-full h-full p-1 md:p-6 group-hover:-translate-y-2 ${
-                        isRevealed ? "cursor-not-allowed" : "cursor-pointer"
-                    } ${buttonClasses}`}
-                    onClick={() => handleChoice(choice)}
+                <div
+                    className={`flex flex-col gap-[12px] w-full h-full p-1 md:p-6 group-hover:-translate-y-2 ${buttonClasses}`}
                 >
-                    <span className="flex flex-col">
+                    <button
+                        type="button"
+                        className="flex flex-col"
+                        onClick={() => handleChoice(choice)}
+                        disabled={isRevealed}
+                    >
                         <span className="font-bold text-[24px] break-all">{tag.name}</span>
-                        <span className="italic text-[14px] leading-0 my-2">{getCategoryName(tag.category)}</span>
-                    </span>
-
-                    <div className="flex flex-col mb-[0px]">
-                        <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
-                            <ImageCard tag={tag} ratingLevel={ratingLevel} />
-                        </span>
-                        {choice === "lower" ? (
-                            <span className="text-[32px] md:text-[42px] font-bold leading-none">
-                                {tag.count.toLocaleString()}
+                        <span className="italic text-[14px] mb-2">{getCategoryName(tag.category)}</span>
+                        <div className="flex flex-col mb-[0px]">
+                            <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
+                                <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
                             </span>
-                        ) : (
-                            <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
-                        )}
-                        <span>posts</span>
-                    </div>
-                </button>
+
+                            {choice === "lower" ? (
+                                <span className="text-[32px] md:text-[42px] font-bold leading-none">
+                                    {tag.count.toLocaleString()}
+                                </span>
+                            ) : (
+                                <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
+                            )}
+                            <span>posts</span>
+                        </div>
+                    </button>
+                </div>
             </div>
             <span className="flex flex-row gap-2 items-center justify-center pt-3">
                 <button
@@ -102,10 +145,17 @@ export default function TagCard({
                     title="View bigger image"
                     className={`${buttonClasses} p-2 disabled:opacity-50 disabled:pointer-events-none`}
                     disabled={!sourceLink}
+                    onClick={() => setShowImageViewer(true)}
                 >
                     🔎
                 </button>
             </span>
+            <ImageViewer
+                isRevealed={showImageViewer}
+                onClose={() => setShowImageViewer(false)}
+                imageUrl={sources[0]}
+                tagName={tag.name}
+            />
         </div>
     );
 }

@@ -5,13 +5,8 @@ import { useState } from "react";
 import Modal from "./Modal";
 import Settings from "./Settings";
 import { WHICH_TAG_TEXT } from "../constants";
-
-interface HeaderProps {
-    gameMode: "Daily" | "Endless";
-    setGameMode: (mode: "Daily" | "Endless") => void;
-    currentStreak: number;
-    bestStreak: number;
-}
+import GameModeToggle from "./GameModeToggle";
+import { HeaderProps } from "../interfaces";
 
 export default function Header({ gameMode, setGameMode, currentStreak, bestStreak }: HeaderProps) {
     const [showSettings, setShowSettings] = useState(false);
@@ -20,26 +15,7 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
         <header className="flex flex-row justify-between sm:grid sm:grid-cols-[1fr_auto_1fr] bg-[#0f223d] border-b-1 shadow-md sm:shadow-none sm:bg-transparent sm:border-0 items-center w-full sticky top-0 z-10 px-4 py-2 sm:static mt-0 sm:p-0 sm:mt-6">
             <div className="justify-self-start flex flex-col items-center">
                 <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" />
-                <div className="hidden sm:flex rounded-lg shadow-sm sm:mt-2" role="group">
-                    <button
-                        type="button"
-                        className={`px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-l-lg hover:bg-gray-600 focus:z-10 focus:ring-2 focus:ring-gray-500 ${
-                            gameMode === "Endless" ? "bg-gray-900" : ""
-                        }`}
-                        onClick={() => setGameMode("Endless")}
-                    >
-                        Endless
-                    </button>
-                    <button
-                        type="button"
-                        className={`px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-r-lg hover:bg-gray-600 focus:z-10 focus:ring-2 focus:ring-gray-500 ${
-                            gameMode === "Daily" ? "bg-gray-900" : ""
-                        }`}
-                        onClick={() => setGameMode("Daily")}
-                    >
-                        Daily
-                    </button>
-                </div>
+                {/* <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} /> */}
             </div>
             <div className="justify-self-center flex flex-col items-center">
                 <div className="text-center text-2xl md:text-3xl hidden sm:block sm:pb-4">

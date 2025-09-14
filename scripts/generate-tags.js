@@ -57,6 +57,7 @@ const blacklist = [
     "hyperscat",
     "incest",
     "incest_(lore)",
+    "incestuous_voyeur_(lore)",
     "infantilism",
     "involuntary_pedophilia",
     "loli",
@@ -167,11 +168,7 @@ async function downloadAndExtract(url, outputPath) {
         https
             .get(url, (response) => {
                 if (response.statusCode !== 200) {
-                    reject(
-                        new Error(
-                            `Failed to get '${url}' (${response.statusCode})`
-                        )
-                    );
+                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
                     return;
                 }
 
@@ -227,53 +224,34 @@ async function parsePosts(topTags) {
             .on("data", (line) => {
                 if (isFirstLine) {
                     isFirstLine = false;
-                    return; // skip header
+                    return;
                 }
 
-                if (
-                    line.length !== 29 ||
-                    !isNumber(line[0]) ||
-                    line[20] === "t" || // post is deleted
-                    ["webm", "swf", "gif", "mp4"].includes(line[11]) ||
-                    parseInt(line[23], 10) < 0
-                )
-                    return;
+                if (shouldProcessPost(line)) return;
 
                 const id = line[0];
                 const md5 = line[3];
                 const rating = line[5]; // explicit, questionable, safe
+                const postTags = line[8].split(/\s+/);
                 const fileExt = line[11];
                 const score = parseInt(line[23], 10);
 
-                if (!["png", "jpg"].includes(fileExt)) return;
+                const blacklistedTag = postTags.find((t) => blacklist.includes(t));
+                if (blacklistedTag) return;
 
-                const postTags = line[8].split(/\s+/);
-                for (let i = 0; i < postTags.length; i++) {
-                    const tagName = postTags[i];
-
-                    // don't process post if a tag in a post is in blacklist
-                    if (blacklist.includes(tagName)) break;
-
+                for (const tagName of postTags) {
                     if (!targetTagsSet.has(tagName)) continue;
 
                     const tag = topTagsMap.get(tagName);
-                    if (
-                        !tag ||
-                        ([4, 5].includes(tag.category) &&
-                            !postTags.includes("solo"))
-                    )
-                        continue;
+                    if (!tag || ([4, 5].includes(tag.category) && !postTags.includes("solo"))) continue;
 
                     const ratingKey = ratingMap[rating.toLowerCase()];
-                    if (!ratingKey || tag.images[ratingKey].score > score)
-                        continue;
+                    if (!ratingKey || tag.images[ratingKey].score > score) continue;
 
                     const existingImage = usedImages.get(md5);
                     if (existingImage && existingImage.tag.name !== tag.name) {
                         if (score > existingImage.score) {
-                            existingImage.tag.resetPreview(
-                                existingImage.ratingKey
-                            );
+                            existingImage.tag.resetPreview(existingImage.ratingKey);
                             tag.updatePreview(id, rating, score, md5, fileExt);
                             usedImages.set(md5, { id, tag, score, ratingKey });
                         }
@@ -298,11 +276,7 @@ function saveTagsAsJson(topTags) {
     };
 
     try {
-        fs.writeFileSync(
-            outputPath,
-            JSON.stringify(outputData, null, 2),
-            "utf-8"
-        );
+        fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), "utf-8");
         fs.writeFileSync(outputMinPath, encode(outputData), "utf-8");
         console.log(`Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
@@ -334,6 +308,16 @@ function getYesterdayDate() {
     return formatted;
 }
 
+function shouldProcessPost(line) {
+    return (
+        line.length !== 29 ||
+        !isNumber(line[0]) ||
+        line[20] === "t" || // post is deleted
+        !!["png", "jpg"].includes(line[11]) ||
+        parseInt(line[23], 10) < 0
+    );
+}
+
 // classes
 class Tag {
     constructor(name, category, count) {
@@ -357,10 +341,7 @@ class Tag {
         const ratingKey = ratingMap[rating.toLowerCase()];
         if (!ratingKey) return;
 
-        if (
-            this.images[ratingKey].score === null ||
-            score > this.images[ratingKey].score
-        ) {
+        if (this.images[ratingKey].score === null || score > this.images[ratingKey].score) {
             this.images[ratingKey] = { id, md5, score, fileExt };
         }
     }

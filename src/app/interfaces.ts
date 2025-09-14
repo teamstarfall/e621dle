@@ -65,3 +65,13 @@ export interface ErrorBoundaryProps {
 export interface GameProps {
     posts: Promise<TagResponse>;
 }
+
+export interface GameModeProps {
+    gameMode: "Daily" | "Endless";
+    setGameMode: (mode: "Daily" | "Endless") => void;
+}
+
+export interface HeaderProps extends GameModeProps {
+    currentStreak: number;
+    bestStreak: number;
+}
