@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useEffect } from "react";
 
 interface ImageViewerProps {
     isRevealed: boolean;
@@ -23,7 +24,7 @@ export default function ImageViewer({ isRevealed, onClose, imageUrl, tagName }: 
                         <Image
                             key={imageUrl}
                             src={imageUrl || "none"}
-                            alt={tagName}
+                            alt={`${tagName} large image`}
                             unoptimized
                             fill
                             className="object-contain rounded-md"

@@ -158,7 +158,7 @@ export default function TagCard({
             <ImageViewer
                 isRevealed={showImageViewer}
                 onClose={() => setShowImageViewer(false)}
-                imageUrl={sources[0]?.url}
+                imageUrl={sources[sourceIndex]?.url}
                 tagName={tag.name}
             />
         </div>
