@@ -24,7 +24,7 @@ function AnimatedNumber({
 }
 
 const buttonClasses =
-    "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#1f3c67] transition-all";
+    "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all";
 export default function TagCard({
     tag,
     isRevealed,
@@ -118,16 +118,15 @@ export default function TagCard({
                             <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
                                 <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
                             </span>
-
-                            {choice === "lower" ? (
-                                <span className="text-[32px] md:text-[42px] font-bold leading-none">
-                                    {tag.count.toLocaleString()}
-                                </span>
-                            ) : (
-                                <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
-                            )}
-                            <span>posts</span>
                         </div>
+                        {choice === "lower" ? (
+                            <span className="text-[32px] md:text-[42px] font-bold leading-none">
+                                {tag.count.toLocaleString()}
+                            </span>
+                        ) : (
+                            <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
+                        )}
+                        <span>posts</span>
                     </button>
                 </div>
             </div>
