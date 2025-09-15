@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, use } from "react";
 import { Tag, GameProps } from "../interfaces";
 import TagCard from "./TagCard";
-import { BEST_STREAK, INCREMENT_ANIM_MS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
+import { BEST_STREAK, DAILY_GAME, INCREMENT_ANIM_MS, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
 import Modal from "../components/Modal";
 import { useLocalStorage, useSettings } from "../storage";
 
@@ -38,11 +38,46 @@ function getCategoryName(category: number) {
     }
 }
 
+const generateDailyPosts = (tags: Tag[], date: string) => {
+    if (!tags) return;
+
+    const seed = xmur3(date)();
+    const rand = mulberry32(seed);
+
+    const pairs: [Tag, Tag][] = [];
+    const used = new Set<number>();
+
+    while (tags.length < MAX_ROUNDS && used.size < tags.length) {
+        const firstIdx = Math.floor(rand() * tags.length);
+        let secondIdx = Math.floor(rand() * tags.length);
+
+        //prevent duplicates
+        while (secondIdx === firstIdx) {
+            secondIdx = Math.floor(rand() * tags.length);
+        }
+
+        if (used.has(firstIdx) || used.has(secondIdx)) continue;
+
+        pairs.push([tags[firstIdx], tags[secondIdx]]);
+        used.add(firstIdx);
+        used.add(secondIdx);
+    }
+};
+
+const initRoundResults = (date: string) => {
+    return {
+        date: date,
+        results: Array.from({ length: 10 }, () => ({ result: "unknown" })),
+    };
+};
+
 import Header from "./Header";
 import Footer from "./Footer";
+import { mulberry32, xmur3 } from "../utils/rng";
 
 export default function Game({ posts }: GameProps) {
     const { tags, date } = use(posts);
+    const dailyTags = generateDailyPosts(tags, date);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
@@ -67,6 +102,11 @@ export default function Game({ posts }: GameProps) {
     const [gameOver, setGameOver] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [gameMode, setGameMode] = useState<"Daily" | "Endless">("Daily");
+
+    //daily states
+    const [currentRound, setCurrentRound] = useState(0);
+    const [isViewingRound, setIsViewingRound] = useState(false);
+    const [roundResults, setRoundResults] = useLocalStorage<any>(DAILY_GAME, initRoundResults);
 
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
@@ -104,7 +144,7 @@ export default function Game({ posts }: GameProps) {
         }
     }, [characterTagsOnly, filteredTags, leftTag, rightTag, showCharactersOnly]);
 
-    function continueGame() {
+    const continueGame = () => {
         setCurrentStreak((prev) => prev + 1);
         if (currentStreak + 1 > (bestStreak ?? 0)) {
             setBestStreak(currentStreak + 1);
@@ -119,7 +159,7 @@ export default function Game({ posts }: GameProps) {
         }
         setIsRevealed(false);
         setShowContinue(false);
-    }
+    };
 
     const handleChoice = (selectedChoice: "higher" | "lower") => {
         if (isRevealed || !leftTag || !rightTag) return;
