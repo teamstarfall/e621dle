@@ -126,7 +126,7 @@ export default function Settings() {
                         hoveredRating === "characterSetting" ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                 >
-                    Will apply on next round.
+                    Will apply on next game.
                 </div>
             </div>
             <div className="relative flex items-center mt-2">
