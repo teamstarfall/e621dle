@@ -40,9 +40,8 @@ export async function fetchTags() {
                     throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
                 }
 
-                await writeFile(filePath, JSON.stringify(response.json(), null, 2));
-
                 data = await response.json();
+                await writeFile(filePath, JSON.stringify(data, null, 2));
             } else {
                 throw error;
             }
