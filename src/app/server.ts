@@ -18,8 +18,6 @@ function getEnvironment(): Environment {
 
 const currentEnvironment = getEnvironment();
 
-console.log(`Running in ${currentEnvironment} environment.`);
-
 export async function fetchTags() {
     let data: TagResponse;
 
