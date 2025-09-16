@@ -5,11 +5,7 @@ import Spinner from "./components/Spinner";
 import { fetchPosts } from "./fetch";
 
 function Error() {
-    return (
-        <div className="w-screen h-screen flex items-center justify-center">
-            Something went wrong.
-        </div>
-    );
+    return <div className="w-screen h-screen flex items-center justify-center">Something went wrong.</div>;
 }
 
 function Loading() {

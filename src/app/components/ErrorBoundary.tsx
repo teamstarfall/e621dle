@@ -3,10 +3,7 @@
 import React from "react";
 import { ErrorBoundaryProps, ErrorBoundaryState } from "../interfaces";
 
-export default class ErrorBoundary extends React.Component<
-    ErrorBoundaryProps,
-    ErrorBoundaryState
-> {
+export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
     state = {
         error: null,
         didThrow: false,

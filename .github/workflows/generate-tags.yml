@@ -5,6 +5,8 @@ on:
     schedule:
         - cron: "0 12 * * 0"
     push:
+        branches:
+            - "dev"
         paths:
             - "scripts/generate-tags.js"
 
@@ -17,10 +19,10 @@ jobs:
             contents: write
 
         steps:
-            - name: Checkout data branch
+            - name: Checkout triggering branch
               uses: actions/checkout@v4
               with:
-                  ref: data
+                  fetch-depth: 0
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -34,15 +36,24 @@ jobs:
             - name: Run tag generation script
               run: npm run generate-tags
 
-            - name: Commit and push if changed
+            - name: Push /resources folder to data branch
               run: |
-                  git config --global user.name 'github-actions[bot]'
-                  git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-                  git add resources/
-                  # Check if there are staged changes and commit if there are
-                  if ! git diff --staged --quiet; then
-                    git commit -m "chore(data): update generated tags"
-                    git push
-                  else
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  # prepare a worktree for the data branch
+                  git fetch origin data || true
+                  git worktree add data-branch data || git worktree add data-branch -b data origin/dev
+
+                  # copy resources into the data branch
+                  mkdir -p data-branch/resources
+                  cp -r resources/* data-branch/resources/
+
+                  cd data-branch
+                  git add resources
+                  if git diff --cached --quiet; then
                     echo "No changes to commit."
+                  else
+                    git commit -m "chore(data): update generated tags from $GITHUB_REF"
+                    git push origin data
                   fi

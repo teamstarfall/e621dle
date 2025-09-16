@@ -6,3 +6,4 @@ export const SETTINGS_CHARACTER_TAGS_ONLY = "characterTagsOnly";
 export const SETTINGS_ADULT_WARNING = "adultWarningAccept";
 export const SETTINGS_PAUSE_BEFORE_NEXT = "pauseBeforeNext";
 export const BEST_STREAK = "bestStreak";
+export const WHICH_TAG_TEXT = "Which tag has more posts?";

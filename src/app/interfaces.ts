@@ -15,13 +15,15 @@ export interface TagResponse {
 }
 
 export interface ImagePreviews {
+    [key: string]: TopRating;
     explicit: TopRating;
     questionable: TopRating;
     safe: TopRating;
 }
 
 export interface TopRating {
-    url: string;
+    id: string;
+    md5: string;
     score: number;
     fileExt: string;
 }
@@ -34,7 +36,7 @@ export interface Ratings {
 
 export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
 
-export interface TagDisplayProps {
+export interface TagCardProps {
     tag: Tag | null;
     isRevealed: boolean;
     handleChoice: (choice: "higher" | "lower") => void;
@@ -62,4 +64,14 @@ export interface ErrorBoundaryProps {
 
 export interface GameProps {
     posts: Promise<TagResponse>;
+}
+
+export interface GameModeProps {
+    gameMode: "Daily" | "Endless";
+    setGameMode: (mode: "Daily" | "Endless") => void;
+}
+
+export interface HeaderProps extends GameModeProps {
+    currentStreak: number;
+    bestStreak: number;
 }
