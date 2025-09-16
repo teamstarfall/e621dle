@@ -8,7 +8,7 @@ import Modal from "../components/Modal";
 import { useLocalStorage, useSettings } from "../storage";
 
 function getRandomTag(tags: Tag[]): Tag | null {
-    if (tags.length === 0) return null;
+    if (!tags || tags.length === 0) return null;
     const randomIndex = Math.floor(Math.random() * tags.length);
     return tags[randomIndex];
 }
@@ -201,7 +201,10 @@ export default function Game({ posts }: GameProps) {
     }
 
     return (
-        <div id="container" className="font-sans items-center flex flex-col min-h-screen max-w-[1200px] mx-auto w-full">
+        <div
+            id="container"
+            className="font-sans items-center flex flex-col min-h-screen max-w-[1200px] mx-auto w-full px-1 sm:px-4"
+        >
             <Header
                 gameMode={gameMode}
                 setGameMode={setGameMode}
@@ -210,37 +213,35 @@ export default function Game({ posts }: GameProps) {
             />
 
             <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
-                <div
-                    className={`flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
-                >
-                    {!leftTag || !rightTag ? (
-                        <div className="flex items-center justify-center text-center mx-auto">Loading tags...</div>
-                    ) : (
-                        <>
-                            <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
-                            <TagCard
-                                tag={leftTag}
-                                isRevealed={isRevealed}
-                                handleChoice={handleChoice}
-                                choice="lower"
-                                getCategoryName={getCategoryName}
-                                ratingLevel={ratingLevel ?? "Safe"}
-                            />
-                            <div className="font-bold sm:my-auto sm:px-4 justify-self-center">
-                                <span className="text-3xl p-0 sm:py-4">or</span>
-                            </div>
-                            <TagCard
-                                tag={rightTag}
-                                isRevealed={isRevealed}
-                                handleChoice={handleChoice}
-                                choice="higher"
-                                getCategoryName={getCategoryName}
-                                animatedCount={animatedCount}
-                                ratingLevel={ratingLevel ?? "Safe"}
-                            />
-                        </>
-                    )}
-                </div>
+                {!leftTag || !rightTag ? (
+                    <div className="flex items-center justify-center text-center mx-auto">Loading tags...</div>
+                ) : (
+                    <div
+                        className={`flex flex-col sm:grid md:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
+                    >
+                        <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
+                        <TagCard
+                            tag={leftTag}
+                            isRevealed={isRevealed}
+                            handleChoice={handleChoice}
+                            choice="lower"
+                            getCategoryName={getCategoryName}
+                            ratingLevel={ratingLevel ?? "Safe"}
+                        />
+                        <div className="font-bold sm:my-auto sm:px-4 justify-self-center">
+                            <span className="text-3xl p-0 sm:py-4">or</span>
+                        </div>
+                        <TagCard
+                            tag={rightTag}
+                            isRevealed={isRevealed}
+                            handleChoice={handleChoice}
+                            choice="higher"
+                            getCategoryName={getCategoryName}
+                            animatedCount={animatedCount}
+                            ratingLevel={ratingLevel ?? "Safe"}
+                        />
+                    </div>
+                )}
             </main>
 
             {pause && !gameOver && (

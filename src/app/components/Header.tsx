@@ -17,9 +17,9 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                 <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" />
                 {/* <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} /> */}
             </div>
-            <div className="justify-self-center flex flex-col items-center">
-                <div className="text-center text-2xl md:text-3xl hidden sm:block sm:pb-4">
-                    <span className="sm:inline font-bold">{WHICH_TAG_TEXT}</span>
+            <div className="justify-self-center flex flex-col items-center mx-2">
+                <div className="text-center hidden sm:block sm:pb-4">
+                    <span className="sm:inline font-bold text-2xl">{WHICH_TAG_TEXT}</span>
                 </div>
                 <div className="flex flex-row items-center px-2 py-1 sm:px-4 sm:py-2 border-1 rounded-xl bg-[#071e32] justify-items-center">
                     <span className="flex flex-row text-center justify-center items-center">

@@ -33,16 +33,15 @@ export async function fetchTags() {
             if (error.code === "ENOENT") {
                 console.log("Local tags.json not found, fetching from remote...");
                 const response = await fetch(
-                    "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.json",
+                    "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.dev.json",
                     { cache: "no-store" }
                 );
                 if (!response.ok) {
                     throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
                 }
 
-                await writeFile(filePath, JSON.stringify(response.json(), null, 2));
-
                 data = await response.json();
+                await writeFile(filePath, JSON.stringify(data, null, 2));
             } else {
                 throw error;
             }
