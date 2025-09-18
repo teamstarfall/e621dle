@@ -18,8 +18,6 @@ function getEnvironment(): Environment {
 
 const currentEnvironment = getEnvironment();
 
-console.log(`Running in ${currentEnvironment} environment.`);
-
 export async function fetchTags() {
     let data: TagResponse;
 
@@ -33,7 +31,7 @@ export async function fetchTags() {
             if (error.code === "ENOENT") {
                 console.log("Local tags.json not found, fetching from remote...");
                 const response = await fetch(
-                    "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.json",
+                    "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.dev.json",
                     { cache: "no-store" }
                 );
                 if (!response.ok) {

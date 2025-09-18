@@ -18,9 +18,9 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                 <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" />
                 <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} />
             </div>
-            <div className="justify-self-center flex flex-col items-center">
-                <div className="text-center text-2xl md:text-3xl hidden sm:block sm:pb-4">
-                    <span className="sm:inline font-bold">{WHICH_TAG_TEXT}</span>
+            <div className="justify-self-center flex flex-col items-center mx-2">
+                <div className="text-center hidden sm:block sm:pb-4">
+                    <span className="sm:inline font-bold text-2xl">{WHICH_TAG_TEXT}</span>
                 </div>
                 <Scoreboard gameMode={gameMode} currentStreak={currentStreak} bestStreak={bestStreak} />
             </div>
