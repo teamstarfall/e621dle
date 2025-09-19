@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useSettings } from "../storage";
+import { GameMode } from "../interfaces";
 
-export default function Settings() {
+export default function Settings({ gameMode }: { gameMode: GameMode }) {
     const [hoveredRating, setHoveredRating] = useState<string | null>(null);
 
     const { ratingLevel, setRatingLevel, characterTagsOnly, setCharacterTagsOnly, pause, setPause } = useSettings();
@@ -114,6 +115,7 @@ export default function Settings() {
                 <input
                     type="checkbox"
                     id="character-toggle"
+                    disabled={gameMode === "Daily"}
                     checked={characterTagsOnly || false}
                     onChange={handleToggle}
                     className="disabled:opacity-50 disabled:cursor-not-allowed"
@@ -126,7 +128,7 @@ export default function Settings() {
                         hoveredRating === "characterSetting" ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                 >
-                    Will apply on next game.
+                    Will apply on next <b>Endless</b> game.
                 </div>
             </div>
             <div className="relative flex items-center mt-2">

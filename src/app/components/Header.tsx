@@ -9,7 +9,7 @@ import GameModeToggle from "./GameModeToggle";
 import { HeaderProps } from "../interfaces";
 import Scoreboard from "./Scoreboard";
 
-export default function Header({ gameMode, setGameMode, currentStreak, bestStreak }: HeaderProps) {
+export default function Header({ gameMode, setGameMode, currentStreak, bestStreak, roundResults }: HeaderProps) {
     const [showSettings, setShowSettings] = useState(false);
 
     return (
@@ -22,7 +22,12 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                 <div className="text-center hidden sm:block sm:pb-4">
                     <span className="sm:inline font-bold text-2xl">{WHICH_TAG_TEXT}</span>
                 </div>
-                <Scoreboard gameMode={gameMode} currentStreak={currentStreak} bestStreak={bestStreak} />
+                <Scoreboard
+                    gameMode={gameMode}
+                    currentStreak={currentStreak}
+                    bestStreak={bestStreak}
+                    roundResults={roundResults}
+                />
             </div>
             <div className="justify-self-end">
                 <div className="sm:hidden">
@@ -39,12 +44,12 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                     </button>
                 </div>
                 <div className="hidden sm:block">
-                    <Settings />
+                    <Settings gameMode={gameMode} />
                 </div>
             </div>
 
             <Modal isRevealed={showSettings} onClose={() => setShowSettings(false)}>
-                <Settings />
+                <Settings gameMode={gameMode} />
             </Modal>
         </header>
     );

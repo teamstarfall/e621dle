@@ -33,6 +33,7 @@ export default function TagCard({
     getCategoryName,
     animatedCount,
     ratingLevel,
+    gameMode,
 }: TagCardProps) {
     const [showImageViewer, setShowImageViewer] = useState(false);
     const sourceLink = useMemo(() => {
@@ -73,7 +74,7 @@ export default function TagCard({
 
             if (md5) {
                 potential.push({
-                    url: `https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
+                    url: `https://static1.e621.net/data/sample/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
                     score: score,
                 });
                 potential.push({
@@ -119,7 +120,7 @@ export default function TagCard({
                                 <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
                             </span>
                         </div>
-                        {choice === "lower" ? (
+                        {gameMode === "Endless" && choice === "right" ? (
                             <span className="text-[32px] md:text-[42px] font-bold leading-none">
                                 {tag.count.toLocaleString()}
                             </span>

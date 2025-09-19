@@ -1,4 +1,17 @@
-export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults }: any) {
+import { RoundResult, ScoreboardProps } from "../interfaces";
+
+export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults }: ScoreboardProps) {
+    const getColorValue = (value: RoundResult) => {
+        switch (value) {
+            case "u":
+                return "bg-stone-200";
+            case "i":
+                return "bg-red-500";
+            case "c":
+                return "bg-green-500";
+        }
+    };
+
     return (
         <div className="flex flex-row items-center px-2 py-1 sm:px-4 sm:py-2 border-1 rounded-xl bg-[#071e32] justify-items-center">
             {gameMode === "Endless" ? (
@@ -14,7 +27,19 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
                     </span>
                 </>
             ) : (
-                <></>
+                <div className="flex flex-col items-center gap-1">
+                    <div>Round 1 of 10</div>
+                    <div className="flex flex-row gap-1">
+                        {roundResults?.results.map((value: RoundResult, index: number) => (
+                            <span
+                                key={index}
+                                className={`h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] border-1 border-gray-600 rounded-md ${getColorValue(
+                                    value
+                                )}`}
+                            />
+                        ))}
+                    </div>
+                </div>
             )}
         </div>
     );

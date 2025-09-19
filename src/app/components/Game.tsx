@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, use } from "react";
-import { Tag, GameProps } from "../interfaces";
+import { useState, useEffect, useMemo, use, useRef } from "react";
+import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
 import TagCard from "./TagCard";
 import { BEST_STREAK, DAILY_GAME, INCREMENT_ANIM_MS, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
 import Modal from "../components/Modal";
@@ -39,7 +39,7 @@ function getCategoryName(category: number) {
 }
 
 const generateDailyPosts = (tags: Tag[], date: string) => {
-    if (!tags) return;
+    if (!tags) return null;
 
     const seed = xmur3(date)();
     const rand = mulberry32(seed);
@@ -47,7 +47,7 @@ const generateDailyPosts = (tags: Tag[], date: string) => {
     const pairs: [Tag, Tag][] = [];
     const used = new Set<number>();
 
-    while (tags.length < MAX_ROUNDS && used.size < tags.length) {
+    while (pairs.length < MAX_ROUNDS && used.size < tags.length) {
         const firstIdx = Math.floor(rand() * tags.length);
         let secondIdx = Math.floor(rand() * tags.length);
 
@@ -62,12 +62,20 @@ const generateDailyPosts = (tags: Tag[], date: string) => {
         used.add(firstIdx);
         used.add(secondIdx);
     }
+    return pairs;
 };
 
-const initRoundResults = (date: string) => {
+const initRoundResults = () => {
+    const today = new Date();
+
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+    const dd = String(today.getDate()).padStart(2, "0");
+
+    const formatted = `${yyyy}-${mm}-${dd}`;
     return {
-        date: date,
-        results: Array.from({ length: 10 }, () => ({ result: "unknown" })),
+        date: formatted,
+        results: Array(10).fill("u"),
     };
 };
 
@@ -77,7 +85,7 @@ import { mulberry32, xmur3 } from "../utils/rng";
 
 export default function Game({ posts }: GameProps) {
     const { tags, date } = use(posts);
-    const dailyTags = generateDailyPosts(tags, date);
+    const dailyTags = useMemo(() => generateDailyPosts(tags, date), [tags, date]);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
@@ -101,13 +109,33 @@ export default function Game({ posts }: GameProps) {
     const [animatedCount, setAnimatedCount] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
-    const [gameMode, setGameMode] = useState<"Daily" | "Endless">("Daily");
+    const [gameMode, setGameMode] = useState<GameMode>("Endless");
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     //daily states
-    const [currentRound, setCurrentRound] = useState(0);
     const [isViewingRound, setIsViewingRound] = useState(false);
-    const [roundResults, setRoundResults] = useLocalStorage<any>(DAILY_GAME, initRoundResults);
+    const [roundResults, setRoundResults] = useLocalStorage<RoundResults>(DAILY_GAME, initRoundResults());
+    const [displayedRoundResults, setDisplayedRoundResults] = useState(roundResults);
 
+    const firstUnplayedIndex = useMemo(() => {
+        const index = roundResults?.results.indexOf("u");
+        if (index === -1) {
+            return MAX_ROUNDS - 1;
+        }
+        return index ?? 0;
+    }, [roundResults]);
+    const [currentRound, setCurrentRound] = useState(firstUnplayedIndex);
+
+    //stop animation when changing game modes
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, [gameMode]);
+
+    //animate incrementing count when choice is made
     useEffect(() => {
         if (isRevealed && leftTag && rightTag) {
             const start = 0;
@@ -132,17 +160,27 @@ export default function Game({ posts }: GameProps) {
         }
     }, [isRevealed, leftTag, rightTag]);
 
+    //initally set tags
     useEffect(() => {
-        if (showCharactersOnly === null) {
-            setShowCharactersOnly(characterTagsOnly);
-            return;
-        }
+        if (gameMode === "Endless") {
+            if (showCharactersOnly === null) {
+                setShowCharactersOnly(characterTagsOnly);
+                return;
+            }
 
-        if (leftTag === null || rightTag === null) {
-            setLeftTag(getRandomTag(filteredTags));
-            setRightTag(getRandomTag(filteredTags));
+            if (leftTag === null || rightTag === null) {
+                setLeftTag(getRandomTag(filteredTags));
+                setRightTag(getRandomTag(filteredTags));
+            }
+        } else {
+            console.log(currentRound);
+            if (dailyTags && (leftTag === null || rightTag === null)) {
+                const current = dailyTags[currentRound];
+                setLeftTag(current[0]);
+                setRightTag(current[1]);
+            }
         }
-    }, [characterTagsOnly, filteredTags, leftTag, rightTag, showCharactersOnly]);
+    }, [characterTagsOnly, currentRound, dailyTags, filteredTags, gameMode, leftTag, rightTag, showCharactersOnly]);
 
     const continueGame = () => {
         setCurrentStreak((prev) => prev + 1);
@@ -161,30 +199,92 @@ export default function Game({ posts }: GameProps) {
         setShowContinue(false);
     };
 
-    const handleChoice = (selectedChoice: "higher" | "lower") => {
+    const nextRound = () => {
+        if (!roundResults || !dailyTags) return;
+
+        const nextRoundIndex = currentRound + 1;
+        setDisplayedRoundResults(roundResults);
+        setIsRevealed(false);
+        setShowContinue(false);
+
+        if (nextRoundIndex < dailyTags.length) {
+            const current = dailyTags[nextRoundIndex];
+            setLeftTag(current[0]);
+            setRightTag(current[1]);
+            setCurrentRound(nextRoundIndex);
+        } else {
+            // todo finished daily
+        }
+    };
+
+    const handleChoice = (selectedChoice: Choice) => {
         if (isRevealed || !leftTag || !rightTag) return;
 
         setAnimatedCount(0);
 
         const wasCorrect =
-            (selectedChoice === "higher" && rightTag.count >= leftTag.count) ||
-            (selectedChoice === "lower" && rightTag.count <= leftTag.count);
+            (selectedChoice === "right" && rightTag.count >= leftTag.count) ||
+            (selectedChoice === "left" && rightTag.count <= leftTag.count);
 
-        if (wasCorrect) {
-            setTimeout(() => {
+        setIsRevealed(true);
+
+        if (gameMode === "Endless") {
+            if (wasCorrect) {
+                timeoutRef.current = setTimeout(() => {
+                    if (pause) {
+                        setShowContinue(true);
+                    } else {
+                        continueGame();
+                    }
+                }, SHOW_ANSWER_TIME_MS);
+            } else {
+                timeoutRef.current = setTimeout(() => {
+                    setShowGameOverModal(true);
+                    setGameOver(true);
+                }, SHOW_ANSWER_TIME_MS);
+            }
+        } else {
+            if (roundResults) {
+                const newResults = [...roundResults.results];
+                newResults[currentRound] = wasCorrect ? "c" : "i";
+                const newRoundResults = { ...roundResults, results: newResults };
+                setRoundResults(newRoundResults);
+            }
+
+            timeoutRef.current = setTimeout(() => {
                 if (pause) {
                     setShowContinue(true);
                 } else {
-                    continueGame();
+                    nextRound();
                 }
             }, SHOW_ANSWER_TIME_MS);
-        } else {
-            setTimeout(() => {
-                setShowGameOverModal(true);
-                setGameOver(true);
-            }, SHOW_ANSWER_TIME_MS);
         }
-        setIsRevealed(true);
+    };
+
+    const handleGameModeChange = (mode: GameMode) => {
+        if (mode === gameMode) return;
+
+        setGameMode(mode);
+
+        if (mode === "Endless") {
+            restartRound();
+        } else {
+            if (!dailyTags) return;
+
+            if (currentRound === MAX_ROUNDS - 1) {
+                setIsViewingRound(true);
+                setIsRevealed(true);
+            } else {
+                setIsRevealed(false);
+                setAnimatedCount(0);
+            }
+
+            setShowContinue(false);
+
+            const current = dailyTags[currentRound];
+            setLeftTag(current[0]);
+            setRightTag(current[1]);
+        }
     };
 
     const restartRound = () => {
@@ -247,9 +347,10 @@ export default function Game({ posts }: GameProps) {
         >
             <Header
                 gameMode={gameMode}
-                setGameMode={setGameMode}
+                setGameMode={handleGameModeChange}
                 currentStreak={currentStreak}
                 bestStreak={bestStreak ?? 0}
+                roundResults={displayedRoundResults}
             />
 
             <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
@@ -260,13 +361,15 @@ export default function Game({ posts }: GameProps) {
                         className={`flex flex-col sm:grid md:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
                     >
                         <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
+                        {/*todo move animatedCount to tagCard*/}
                         <TagCard
                             tag={leftTag}
                             isRevealed={isRevealed}
                             handleChoice={handleChoice}
-                            choice="lower"
+                            choice="left"
                             getCategoryName={getCategoryName}
                             ratingLevel={ratingLevel ?? "Safe"}
+                            gameMode={gameMode}
                         />
                         <div className="font-bold sm:my-auto sm:px-4 justify-self-center">
                             <span className="text-3xl p-0 sm:py-4">or</span>
@@ -275,10 +378,11 @@ export default function Game({ posts }: GameProps) {
                             tag={rightTag}
                             isRevealed={isRevealed}
                             handleChoice={handleChoice}
-                            choice="higher"
+                            choice="right"
                             getCategoryName={getCategoryName}
                             animatedCount={animatedCount}
                             ratingLevel={ratingLevel ?? "Safe"}
+                            gameMode={gameMode}
                         />
                     </div>
                 )}
@@ -287,13 +391,17 @@ export default function Game({ posts }: GameProps) {
             {pause && !gameOver && (
                 <div className="flex flex-row gap-4 w-full items-center justify-center">
                     <button
-                        disabled={!showContinue}
+                        disabled={!showContinue || currentRound === MAX_ROUNDS - 1}
                         className="px-6 py-3 rounded-md ring ring-white/50 hover:not-disabled:ring-2 hover:not-disabled:ring-white text-xl font-bold  bg-[#1f3c67] disabled:bg-[#071e32] disabled:text-white/50 disabled:ring-white/15 disabled:cursor-not-allowed transition-discrete transition-all"
                         onClick={() => {
-                            continueGame();
+                            if (gameMode === "Endless") {
+                                continueGame();
+                            } else {
+                                nextRound();
+                            }
                         }}
                     >
-                        Continue
+                        {gameMode === "Endless" ? "Continue" : "Next Round"}
                     </button>
                 </div>
             )}
