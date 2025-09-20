@@ -2,26 +2,7 @@ import { TagCardProps as TagCardProps, ImagePreviews } from "../interfaces";
 import { useEffect, useMemo, useState } from "react";
 import ImageCard from "./ImageCard";
 import ImageViewer from "./ImageViewer";
-
-function AnimatedNumber({
-    isRevealed,
-    animatedCount,
-    tagCount,
-}: {
-    isRevealed: boolean;
-    animatedCount?: number;
-    tagCount: number;
-}) {
-    const displayCount = () => {
-        if (!isRevealed) {
-            return "?";
-        }
-        // If the animation is running, show the animated count, otherwise show the final tag count.
-        return (animatedCount !== undefined ? animatedCount : tagCount).toLocaleString();
-    };
-
-    return <span className="text-[32px] md:text-[42px] font-bold leading-none">{displayCount()}</span>;
-}
+import AnimatedNumber from "./AnimatedCount";
 
 const buttonClasses =
     "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all";
@@ -31,7 +12,6 @@ export default function TagCard({
     handleChoice,
     choice,
     getCategoryName,
-    animatedCount,
     ratingLevel,
     gameMode,
 }: TagCardProps) {
@@ -120,12 +100,12 @@ export default function TagCard({
                                 <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
                             </span>
                         </div>
-                        {gameMode === "Endless" && choice === "right" ? (
+                        {gameMode === "Endless" && choice === "left" ? (
                             <span className="text-[32px] md:text-[42px] font-bold leading-none">
                                 {tag.count.toLocaleString()}
                             </span>
                         ) : (
-                            <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
+                            <AnimatedNumber isRevealed={isRevealed} tag={tag} />
                         )}
                         <span>posts</span>
                     </button>

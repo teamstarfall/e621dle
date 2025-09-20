@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
 import TagCard from "./TagCard";
-import { BEST_STREAK, DAILY_GAME, INCREMENT_ANIM_MS, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
+import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
 import Modal from "../components/Modal";
 import { useLocalStorage, useSettings } from "../storage";
 
@@ -106,7 +106,6 @@ export default function Game({ posts }: GameProps) {
     const [isRevealed, setIsRevealed] = useState(false);
     const [showContinue, setShowContinue] = useState(false);
     const [currentStreak, setCurrentStreak] = useState(0);
-    const [animatedCount, setAnimatedCount] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
     const [gameMode, setGameMode] = useState<GameMode>("Endless");
@@ -134,31 +133,6 @@ export default function Game({ posts }: GameProps) {
             }
         };
     }, [gameMode]);
-
-    //animate incrementing count when choice is made
-    useEffect(() => {
-        if (isRevealed && leftTag && rightTag) {
-            const start = 0;
-            const end = rightTag.count;
-            const range = end - start;
-            let startTime: number | null = null;
-
-            const animate = (currentTime: number) => {
-                if (!startTime) startTime = currentTime;
-                const elapsedTime = currentTime - startTime;
-                let progress = Math.min(elapsedTime / INCREMENT_ANIM_MS, 1);
-                progress = 1 - Math.pow(1 - progress, 3);
-                const currentCount = Math.floor(start + range * progress);
-                setAnimatedCount(currentCount);
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                }
-            };
-
-            requestAnimationFrame(animate);
-        }
-    }, [isRevealed, leftTag, rightTag]);
 
     //initally set tags
     useEffect(() => {
@@ -192,9 +166,6 @@ export default function Game({ posts }: GameProps) {
         setLeftTag(rightTag);
         const newRightTag = getRandomTag(filteredTags);
         setRightTag(newRightTag);
-        if (rightTag) {
-            setAnimatedCount(0);
-        }
         setIsRevealed(false);
         setShowContinue(false);
     };
@@ -219,8 +190,6 @@ export default function Game({ posts }: GameProps) {
 
     const handleChoice = (selectedChoice: Choice) => {
         if (isRevealed || !leftTag || !rightTag) return;
-
-        setAnimatedCount(0);
 
         const wasCorrect =
             (selectedChoice === "right" && rightTag.count >= leftTag.count) ||
@@ -276,7 +245,6 @@ export default function Game({ posts }: GameProps) {
                 setIsRevealed(true);
             } else {
                 setIsRevealed(false);
-                setAnimatedCount(0);
             }
 
             setShowContinue(false);
@@ -380,7 +348,6 @@ export default function Game({ posts }: GameProps) {
                             handleChoice={handleChoice}
                             choice="right"
                             getCategoryName={getCategoryName}
-                            animatedCount={animatedCount}
                             ratingLevel={ratingLevel ?? "Safe"}
                             gameMode={gameMode}
                         />
