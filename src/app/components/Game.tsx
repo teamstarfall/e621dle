@@ -152,6 +152,7 @@ export default function Game({ posts }: GameProps) {
             index = MAX_ROUNDS - 1;
             setIsViewingRound(true);
             setIsRevealed(true);
+            setShowFinishedModal(true);
         }
 
         setCurrentRound(index ?? 0);
