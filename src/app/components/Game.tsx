@@ -149,16 +149,17 @@ export default function Game({ posts }: GameProps) {
 
         let index = roundResults?.results.indexOf("u");
         if (index === -1) {
-            index = MAX_ROUNDS - 1;
+            index = MAX_ROUNDS;
             setIsViewingRound(true);
             setIsRevealed(true);
             setShowFinishedModal(true);
+            setShowContinue(true);
         }
 
         setCurrentRound(index ?? 0);
 
         if (gameMode === "Daily" && dailyTags) {
-            const current = dailyTags[index];
+            const current = dailyTags[Math.min(index, MAX_ROUNDS - 1)];
             setLeftTag(current[0]);
             setRightTag(current[1]);
         }
@@ -223,7 +224,6 @@ export default function Game({ posts }: GameProps) {
         if (!roundResults || !dailyTags) return;
 
         setDisplayedRoundResults(results ?? roundResults);
-
         setShowContinue(false);
 
         const newIndex = index ?? currentRound;
@@ -234,8 +234,7 @@ export default function Game({ posts }: GameProps) {
             setRightTag(current[1]);
             setCurrentRound(newIndex);
         } else {
-            setIsViewingRound(true);
-            setShowFinishedModal(true);
+            finalizeDaily();
         }
     };
 
@@ -275,6 +274,9 @@ export default function Game({ posts }: GameProps) {
             timeoutRef.current = setTimeout(() => {
                 if (pause) {
                     setShowContinue(true);
+                    if (currentRound + 1 === MAX_ROUNDS) {
+                        finalizeDaily();
+                    }
                 } else {
                     // if round proceeds automatically, the states aren't updated yet for nextRound()
                     nextRound(currentRound + 1, newRoundResults);
@@ -286,8 +288,10 @@ export default function Game({ posts }: GameProps) {
     const handleGameModeChange = (mode: GameMode) => {
         if (mode === gameMode || (isRevealed && !isViewingRound)) return;
 
+        setShowContinue(false);
         setGameMode(mode);
         setIsRevealed(false);
+
         if (mode === "Endless") {
             restartRound();
             setShowFinishedModal(false);
@@ -295,18 +299,15 @@ export default function Game({ posts }: GameProps) {
             if (!dailyTags) return;
 
             setShowGameOverModal(false);
-            if (currentRound === MAX_ROUNDS - 1) {
-                setIsViewingRound(true);
-                setShowFinishedModal(true);
-                setIsRevealed(true);
+            if (currentRound === MAX_ROUNDS) {
+                finalizeDaily();
             } else {
                 setIsRevealed(false);
             }
 
-            setShowContinue(false);
             setDisplayedRoundResults(roundResults);
 
-            const current = dailyTags[currentRound];
+            const current = dailyTags[Math.min(currentRound, MAX_ROUNDS - 1)];
             setLeftTag(current[0]);
             setRightTag(current[1]);
         }
@@ -375,6 +376,14 @@ export default function Game({ posts }: GameProps) {
                 }, 3000);
             })
             .catch((err) => console.error("Failed to copy: ", err));
+    };
+
+    const finalizeDaily = () => {
+        setIsViewingRound(true);
+        setShowFinishedModal(true);
+        setIsRevealed(true);
+        setShowContinue(true);
+        setDisplayedRoundResults(roundResults);
     };
 
     const handleAdultWarning = (selectedChoice: boolean) => {
@@ -459,17 +468,25 @@ export default function Game({ posts }: GameProps) {
             {pause && !gameOver && (
                 <div className="flex flex-row gap-4 w-full items-center justify-center">
                     <button
-                        disabled={!showContinue || currentRound === MAX_ROUNDS - 1}
+                        disabled={!showContinue}
                         className="px-6 py-3 rounded-md ring ring-white/50 hover:not-disabled:ring-2 hover:not-disabled:ring-white text-xl font-bold  bg-[#1f3c67] disabled:bg-[#071e32] disabled:text-white/50 disabled:ring-white/15 disabled:cursor-not-allowed transition-discrete transition-all"
                         onClick={() => {
                             if (gameMode === "Endless") {
                                 continueGame();
                             } else {
-                                nextRound();
+                                if (currentRound === MAX_ROUNDS) {
+                                    handleGameModeChange("Endless");
+                                } else {
+                                    nextRound();
+                                }
                             }
                         }}
                     >
-                        {gameMode === "Endless" ? "Continue" : "Next Round"}
+                        {gameMode === "Endless"
+                            ? "Continue"
+                            : currentRound !== MAX_ROUNDS
+                            ? "Next Round"
+                            : "Play Endless Mode"}
                     </button>
                 </div>
             )}
