@@ -14,14 +14,12 @@ export const metadata: Metadata = {
         url: "https://e621dle.starfall.team",
         title: "e621dle",
         description: "A game where you guess which furry tag has the most posts!",
-        siteName: "e621dle",
         images: [{ url: "https://e621dle.starfall.team/preview.png" }],
     },
     twitter: {
         card: "summary_large_image",
-        title: "e621dle by Team Starfall",
-        description: "A game where you guess which furry tag has the most posts!",
-        images: [{ url: "https://e621dle.starfall.team/preview.png" }],
+        creator: "@angelolz1",
+        images: "https://e621dle.starfall.team/preview.png",
     },
 };
 
