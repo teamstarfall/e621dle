@@ -283,7 +283,7 @@ export default function Game({ posts }: GameProps) {
     };
 
     const handleGameModeChange = (mode: GameMode) => {
-        if (mode === gameMode || isRevealed) return;
+        if (mode === gameMode || (isRevealed && !isViewingRound)) return;
 
         setGameMode(mode);
         setIsRevealed(false);
