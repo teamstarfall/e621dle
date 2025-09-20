@@ -74,6 +74,12 @@ export interface HeaderProps extends GameModeProps {
     currentStreak: number;
     bestStreak: number;
     roundResults: RoundResults | null;
+    characterTagsOnly: boolean | null;
+    setCharacterTagsOnly: React.Dispatch<boolean>;
+    ratingLevel: RatingLevel | null;
+    setRatingLevel: React.Dispatch<RatingLevel>;
+    pause: boolean | null;
+    setPause: React.Dispatch<boolean>;
 }
 
 export interface ScoreboardProps {
@@ -86,6 +92,28 @@ export interface ScoreboardProps {
 export interface RoundResults {
     date: string;
     results: RoundResult[];
+}
+
+export interface AnimatedCountProps {
+    isRevealed: boolean;
+    tag: Tag;
+}
+
+export interface ImageCardProps {
+    currentSrc: { url: string; score: number | undefined };
+    tagName: string;
+    ratingLevel: RatingLevel;
+    handleError: () => void;
+}
+
+export interface SettingsProps {
+    gameMode: GameMode;
+    characterTagsOnly: boolean | null;
+    setCharacterTagsOnly: React.Dispatch<boolean>;
+    ratingLevel: RatingLevel | null;
+    setRatingLevel: React.Dispatch<RatingLevel>;
+    pause: boolean | null;
+    setPause: React.Dispatch<boolean>;
 }
 
 export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Tag } from "../interfaces";
+import { AnimatedCountProps } from "../interfaces";
 import { INCREMENT_ANIM_MS } from "../constants";
 
-export default function AnimatedNumber({ isRevealed, tag }: { isRevealed: boolean; tag: Tag }) {
+export default function AnimatedNumber({ isRevealed, tag }: AnimatedCountProps) {
     const [animatedCount, setAnimatedCount] = useState<number>(0);
     const displayCount = () => {
         if (!isRevealed) {
@@ -11,6 +11,11 @@ export default function AnimatedNumber({ isRevealed, tag }: { isRevealed: boolea
         // If the animation is running, show the animated count, otherwise show the final tag count.
         return animatedCount.toLocaleString();
     };
+
+    //reset to 0 every time tag changes
+    useEffect(() => {
+        setAnimatedCount(0);
+    }, [tag]);
 
     //animate incrementing count when choice is made
     useEffect(() => {

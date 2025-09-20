@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { useSettings } from "../storage";
-import { GameMode } from "../interfaces";
+import { SettingsProps } from "../interfaces";
 
-export default function Settings({ gameMode }: { gameMode: GameMode }) {
+export default function Settings({
+    gameMode,
+    characterTagsOnly,
+    setCharacterTagsOnly,
+    ratingLevel,
+    setRatingLevel,
+    pause,
+    setPause,
+}: SettingsProps) {
     const [hoveredRating, setHoveredRating] = useState<string | null>(null);
-
-    const { ratingLevel, setRatingLevel, characterTagsOnly, setCharacterTagsOnly, pause, setPause } = useSettings();
 
     const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
         const isChecked = e.target.checked;

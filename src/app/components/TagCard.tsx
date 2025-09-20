@@ -97,7 +97,12 @@ export default function TagCard({
                         <span className="italic text-[14px] mb-2">{getCategoryName(tag.category)}</span>
                         <div className="flex flex-col mb-[0px]">
                             <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
-                                <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
+                                <ImageCard
+                                    currentSrc={currentSrc}
+                                    handleError={handleError}
+                                    ratingLevel={ratingLevel}
+                                    tagName={tag.name}
+                                />
                             </span>
                         </div>
                         {gameMode === "Endless" && choice === "left" ? (

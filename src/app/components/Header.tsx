@@ -9,7 +9,19 @@ import GameModeToggle from "./GameModeToggle";
 import { HeaderProps } from "../interfaces";
 import Scoreboard from "./Scoreboard";
 
-export default function Header({ gameMode, setGameMode, currentStreak, bestStreak, roundResults }: HeaderProps) {
+export default function Header({
+    gameMode,
+    setGameMode,
+    currentStreak,
+    bestStreak,
+    roundResults,
+    characterTagsOnly,
+    setCharacterTagsOnly,
+    ratingLevel,
+    setRatingLevel,
+    pause,
+    setPause,
+}: HeaderProps) {
     const [showSettings, setShowSettings] = useState(false);
 
     return (
@@ -44,12 +56,28 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                     </button>
                 </div>
                 <div className="hidden sm:block">
-                    <Settings gameMode={gameMode} />
+                    <Settings
+                        gameMode={gameMode}
+                        characterTagsOnly={characterTagsOnly}
+                        setCharacterTagsOnly={setCharacterTagsOnly}
+                        ratingLevel={ratingLevel}
+                        setRatingLevel={setRatingLevel}
+                        pause={pause}
+                        setPause={setPause}
+                    />
                 </div>
             </div>
 
             <Modal isRevealed={showSettings} onClose={() => setShowSettings(false)}>
-                <Settings gameMode={gameMode} />
+                <Settings
+                    gameMode={gameMode}
+                    characterTagsOnly={characterTagsOnly}
+                    setCharacterTagsOnly={setCharacterTagsOnly}
+                    ratingLevel={ratingLevel}
+                    setRatingLevel={setRatingLevel}
+                    pause={pause}
+                    setPause={setPause}
+                />
             </Modal>
         </header>
     );

@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
-import TagCard from "./TagCard";
 import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
-import Modal from "../components/Modal";
 import { useLocalStorage, useSettings } from "../storage";
+import { mulberry32, xmur3 } from "../utils/rng";
+import TagCard from "./TagCard";
+import Modal from "./Modal";
+import Header from "./Header";
+import Footer from "./Footer";
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (!tags || tags.length === 0) return null;
@@ -79,26 +82,30 @@ const initRoundResults = () => {
     };
 };
 
-import Header from "./Header";
-import Footer from "./Footer";
-import { mulberry32, xmur3 } from "../utils/rng";
-
 export default function Game({ posts }: GameProps) {
     const { tags, date } = use(posts);
     const dailyTags = useMemo(() => generateDailyPosts(tags, date), [tags, date]);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
-    const { ratingLevel, characterTagsOnly, showAdultWarning, setShowAdultWarning, pause } = useSettings();
-
-    const [showCharactersOnly, setShowCharactersOnly] = useState(characterTagsOnly);
+    const {
+        ratingLevel,
+        setRatingLevel,
+        characterTagsOnly,
+        setCharacterTagsOnly,
+        showAdultWarning,
+        setShowAdultWarning,
+        pause,
+        setPause,
+    } = useSettings();
+    const [displayCharactersCurrentGame, setShowCharactersOnly] = useState(characterTagsOnly);
 
     const filteredTags = useMemo(() => {
-        if (showCharactersOnly) {
+        if (displayCharactersCurrentGame) {
             return tags.filter((tag) => tag.category === 4);
         }
         return tags;
-    }, [tags, showCharactersOnly]);
+    }, [tags, displayCharactersCurrentGame]);
 
     //game states
     const [leftTag, setLeftTag] = useState<Tag | null>(null);
@@ -112,7 +119,7 @@ export default function Game({ posts }: GameProps) {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     //daily states
-    const [isViewingRound, setIsViewingRound] = useState(false);
+    // const [isViewingRound, setIsViewingRound] = useState(false);
     const [roundResults, setRoundResults] = useLocalStorage<RoundResults>(DAILY_GAME, initRoundResults());
     const [displayedRoundResults, setDisplayedRoundResults] = useState(roundResults);
 
@@ -137,7 +144,7 @@ export default function Game({ posts }: GameProps) {
     //initally set tags
     useEffect(() => {
         if (gameMode === "Endless") {
-            if (showCharactersOnly === null) {
+            if (displayCharactersCurrentGame === null) {
                 setShowCharactersOnly(characterTagsOnly);
                 return;
             }
@@ -154,7 +161,16 @@ export default function Game({ posts }: GameProps) {
                 setRightTag(current[1]);
             }
         }
-    }, [characterTagsOnly, currentRound, dailyTags, filteredTags, gameMode, leftTag, rightTag, showCharactersOnly]);
+    }, [
+        characterTagsOnly,
+        currentRound,
+        dailyTags,
+        filteredTags,
+        gameMode,
+        leftTag,
+        rightTag,
+        displayCharactersCurrentGame,
+    ]);
 
     const continueGame = () => {
         setCurrentStreak((prev) => prev + 1);
@@ -241,7 +257,7 @@ export default function Game({ posts }: GameProps) {
             if (!dailyTags) return;
 
             if (currentRound === MAX_ROUNDS - 1) {
-                setIsViewingRound(true);
+                // setIsViewingRound(true);
                 setIsRevealed(true);
             } else {
                 setIsRevealed(false);
@@ -319,6 +335,12 @@ export default function Game({ posts }: GameProps) {
                 currentStreak={currentStreak}
                 bestStreak={bestStreak ?? 0}
                 roundResults={displayedRoundResults}
+                characterTagsOnly={characterTagsOnly}
+                setCharacterTagsOnly={setCharacterTagsOnly}
+                ratingLevel={ratingLevel}
+                setRatingLevel={setRatingLevel}
+                pause={pause}
+                setPause={setPause}
             />
 
             <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
@@ -329,7 +351,6 @@ export default function Game({ posts }: GameProps) {
                         className={`flex flex-col sm:grid md:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
                     >
                         <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
-                        {/*todo move animatedCount to tagCard*/}
                         <TagCard
                             tag={leftTag}
                             isRevealed={isRevealed}
