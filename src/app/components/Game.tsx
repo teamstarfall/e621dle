@@ -128,7 +128,7 @@ export default function Game({ posts }: GameProps) {
     const [roundResults, setRoundResults] = useLocalStorage<RoundResults>(DAILY_GAME, initRoundResults());
     const [displayedRoundResults, setDisplayedRoundResults] = useState<RoundResults | null>(null);
     const [currentRound, setCurrentRound] = useState(0);
-    const [showFinishedModal, setShowFinishedModal] = useState(true);
+    const [showFinishedModal, setShowFinishedModal] = useState(false);
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
     const [copyText, setCopyText] = useState(SHARE_SCORE);
 
@@ -283,10 +283,10 @@ export default function Game({ posts }: GameProps) {
     };
 
     const handleGameModeChange = (mode: GameMode) => {
-        if (mode === gameMode) return;
+        if (mode === gameMode || isRevealed) return;
 
         setGameMode(mode);
-
+        setIsRevealed(false);
         if (mode === "Endless") {
             restartRound();
             setShowFinishedModal(false);
