@@ -88,16 +88,7 @@ export default function Game({ posts }: GameProps) {
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
-    const {
-        ratingLevel,
-        setRatingLevel,
-        characterTagsOnly,
-        setCharacterTagsOnly,
-        showAdultWarning,
-        setShowAdultWarning,
-        pause,
-        setPause,
-    } = useSettings();
+    const { ratingLevel, characterTagsOnly, showAdultWarning, setShowAdultWarning, pause } = useSettings();
     const [displayCharactersCurrentGame, setShowCharactersOnly] = useState(characterTagsOnly);
 
     const filteredTags = useMemo(() => {
@@ -335,12 +326,6 @@ export default function Game({ posts }: GameProps) {
                 currentStreak={currentStreak}
                 bestStreak={bestStreak ?? 0}
                 roundResults={displayedRoundResults}
-                characterTagsOnly={characterTagsOnly}
-                setCharacterTagsOnly={setCharacterTagsOnly}
-                ratingLevel={ratingLevel}
-                setRatingLevel={setRatingLevel}
-                pause={pause}
-                setPause={setPause}
             />
 
             <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
