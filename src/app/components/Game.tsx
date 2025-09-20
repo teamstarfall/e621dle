@@ -234,7 +234,7 @@ export default function Game({ posts }: GameProps) {
             setCurrentRound(newIndex);
         } else {
             setIsViewingRound(true);
-            // todo finished daily
+            setShowFinishedModal(true);
         }
     };
 
