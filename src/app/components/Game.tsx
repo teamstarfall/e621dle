@@ -411,7 +411,7 @@ export default function Game({ posts }: GameProps) {
     return (
         <div
             id="container"
-            className="font-sans items-center flex flex-col min-h-screen max-w-[1200px] mx-auto w-full px-1 sm:px-4"
+            className="font-sans items-center flex flex-col min-h-screen max-w-[1200px] mx-auto w-full px-0 sm:px-4"
         >
             <Header
                 gameMode={gameMode}
