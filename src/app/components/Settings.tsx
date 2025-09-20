@@ -13,12 +13,12 @@ export default function Settings({ gameMode, setGameMode }: { gameMode: GameMode
     return (
         <div className="flex flex-col">
             <div className="flex flex-col items-center gap-2">
-                <div className="block sm:hidden">
-                    <label className="text-center whitespace-nowrap mb-2">Game Mode</label>
+                <div className="block sm:hidden text-center">
+                    <label className="whitespace-nowrap mb-2">Game Mode</label>
                     <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} />
                 </div>
-                <div>
-                    <label className="text-center whitespace-nowrap mb-2">Show Ratings</label>
+                <div className="text-center">
+                    <label className="whitespace-nowrap mb-2">Show Ratings</label>
                     <div className="flex rounded-lg shadow-sm" role="group">
                         <div className="relative group">
                             <button
