@@ -1,6 +1,7 @@
+import { MAX_ROUNDS } from "../constants";
 import { RoundResult, ScoreboardProps } from "../interfaces";
 
-export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults }: ScoreboardProps) {
+export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults, showProgress }: ScoreboardProps) {
     const getColorValue = (value: RoundResult) => {
         switch (value) {
             case "u":
@@ -12,6 +13,13 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
         }
     };
 
+    const getRound = () => {
+        if (!roundResults) return 1;
+
+        const index = roundResults.results.indexOf("u");
+        if (index === -1) return MAX_ROUNDS;
+        else return index + 1;
+    };
     return (
         <div className="flex flex-row items-center px-2 py-1 sm:px-4 sm:py-2 border-1 rounded-xl bg-[#071e32] justify-items-center">
             {gameMode === "Endless" ? (
@@ -28,7 +36,7 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
                 </>
             ) : (
                 <div className="flex flex-col items-center gap-1">
-                    <div>Round 1 of 10</div>
+                    {showProgress && <div>{`Round ${getRound()} of ${MAX_ROUNDS}`}</div>}
                     <div className="flex flex-row gap-1">
                         {roundResults?.results.map((value: RoundResult, index: number) => (
                             <span

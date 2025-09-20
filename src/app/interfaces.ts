@@ -78,9 +78,10 @@ export interface HeaderProps extends GameModeProps {
 
 export interface ScoreboardProps {
     gameMode: GameMode;
-    currentStreak: number;
-    bestStreak: number;
+    currentStreak?: number;
+    bestStreak?: number;
     roundResults: RoundResults | null;
+    showProgress?: boolean;
 }
 
 export interface RoundResults {

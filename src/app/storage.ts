@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore, type SetStateAction, type Dispatch } from "react";
+import { useCallback, useSyncExternalStore, type SetStateAction, type Dispatch, useMemo } from "react";
 import {
     SETTINGS_ADULT_WARNING,
     SETTINGS_CHARACTER_TAGS_ONLY,
@@ -37,15 +37,24 @@ export function useLocalStorage<T extends string | number | boolean | RoundResul
 
     const subscribe = useCallback((onStoreChange: () => void) => subscribeToLocalStorage(key, onStoreChange), [key]);
 
-    const snapshot = useCallback(() => {
-        const snapshot = localStorage.getItem(key);
-        console.log("getting snapshot for key: ", key);
-        if (snapshot === null) {
-            return defaultValue;
-        }
+    function createSnapshot<T>(key: string, defaultValue: T, deserialize: (value: string) => T) {
+        let lastRaw: string | null = null;
+        let lastValue: T = defaultValue;
 
-        return deserialize(snapshot);
-    }, [key, deserialize, defaultValue]);
+        return () => {
+            const raw = localStorage.getItem(key);
+            if (raw === null) {
+                return defaultValue;
+            }
+            if (raw !== lastRaw) {
+                lastRaw = raw;
+                lastValue = deserialize(raw);
+            }
+            return lastValue;
+        };
+    }
+
+    const snapshot = useMemo(() => createSnapshot(key, defaultValue, deserialize), [key, defaultValue, deserialize]);
 
     const serverSnapshot = useCallback(() => null, []);
 

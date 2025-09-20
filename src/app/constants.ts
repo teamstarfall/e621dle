@@ -9,3 +9,5 @@ export const BEST_STREAK = "bestStreak";
 export const WHICH_TAG_TEXT = "Which tag has more posts?";
 export const DAILY_GAME = "dailyGame";
 export const MAX_ROUNDS = 10;
+export const URL = "https://e621dle.starfall.team";
+export const SHARE_SCORE = "Share Score";

@@ -15,7 +15,7 @@ export default function AnimatedNumber({ isRevealed, tag }: AnimatedCountProps) 
     //reset to 0 every time tag changes
     useEffect(() => {
         setAnimatedCount(0);
-    }, [tag]);
+    }, [tag, isRevealed]);
 
     //animate incrementing count when choice is made
     useEffect(() => {

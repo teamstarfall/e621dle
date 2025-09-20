@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
-import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT } from "../constants";
+import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHARE_SCORE, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT, URL } from "../constants";
 import { useLocalStorage, useSettings } from "../storage";
 import { mulberry32, xmur3 } from "../utils/rng";
 import TagCard from "./TagCard";
 import Modal from "./Modal";
 import Header from "./Header";
 import Footer from "./Footer";
+import Scoreboard from "./Scoreboard";
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (!tags || tags.length === 0) return null;
@@ -41,10 +42,10 @@ function getCategoryName(category: number) {
     }
 }
 
-const generateDailyPosts = (tags: Tag[], date: string) => {
+const generateDailyPosts = (tags: Tag[]) => {
     if (!tags) return null;
 
-    const seed = xmur3(date)();
+    const seed = xmur3(new Date().toISOString().split("T")[0])();
     const rand = mulberry32(seed);
 
     const pairs: [Tag, Tag][] = [];
@@ -69,22 +70,35 @@ const generateDailyPosts = (tags: Tag[], date: string) => {
 };
 
 const initRoundResults = () => {
-    const today = new Date();
-
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
-    const dd = String(today.getDate()).padStart(2, "0");
-
-    const formatted = `${yyyy}-${mm}-${dd}`;
     return {
-        date: formatted,
-        results: Array(10).fill("u"),
+        date: new Date().toISOString().split("T")[0],
+        results: Array(MAX_ROUNDS).fill("u"),
     };
+};
+
+const getTimeUntilMidnight = () => {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // next day 12:00 AM
+    const timeLeft = tomorrow.getTime() - now.getTime(); // milliseconds
+
+    const hours = Math.floor(timeLeft / 1000 / 60 / 60)
+        .toString()
+        .padStart(2, "0");
+    const minutes = Math.floor((timeLeft / 1000 / 60) % 60)
+        .toString()
+        .padStart(2, "0");
+    const seconds = Math.floor((timeLeft / 1000) % 60)
+        .toString()
+        .padStart(2, "0");
+
+    return `${hours}:${minutes}:${seconds}`;
 };
 
 export default function Game({ posts }: GameProps) {
     const { tags, date } = use(posts);
-    const dailyTags = useMemo(() => generateDailyPosts(tags, date), [tags, date]);
+    const dailyTags = useMemo(() => generateDailyPosts(tags), [tags]);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
@@ -106,22 +120,17 @@ export default function Game({ posts }: GameProps) {
     const [currentStreak, setCurrentStreak] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [showGameOverModal, setShowGameOverModal] = useState(false);
-    const [gameMode, setGameMode] = useState<GameMode>("Endless");
+    const [gameMode, setGameMode] = useState<GameMode>("Daily");
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     //daily states
-    // const [isViewingRound, setIsViewingRound] = useState(false);
+    const [isViewingRound, setIsViewingRound] = useState(false);
     const [roundResults, setRoundResults] = useLocalStorage<RoundResults>(DAILY_GAME, initRoundResults());
-    const [displayedRoundResults, setDisplayedRoundResults] = useState(roundResults);
-
-    const firstUnplayedIndex = useMemo(() => {
-        const index = roundResults?.results.indexOf("u");
-        if (index === -1) {
-            return MAX_ROUNDS - 1;
-        }
-        return index ?? 0;
-    }, [roundResults]);
-    const [currentRound, setCurrentRound] = useState(firstUnplayedIndex);
+    const [displayedRoundResults, setDisplayedRoundResults] = useState<RoundResults | null>(null);
+    const [currentRound, setCurrentRound] = useState(0);
+    const [showFinishedModal, setShowFinishedModal] = useState(true);
+    const [timeLeft, setTimeLeft] = useState<string | null>(null);
+    const [copyText, setCopyText] = useState(SHARE_SCORE);
 
     //stop animation when changing game modes
     useEffect(() => {
@@ -131,6 +140,28 @@ export default function Game({ posts }: GameProps) {
             }
         };
     }, [gameMode]);
+
+    //initally set daily
+    useEffect(() => {
+        if (!roundResults || displayedRoundResults) return; //already init'd
+
+        setDisplayedRoundResults(roundResults);
+
+        let index = roundResults?.results.indexOf("u");
+        if (index === -1) {
+            index = MAX_ROUNDS - 1;
+            setIsViewingRound(true);
+            setIsRevealed(true);
+        }
+
+        setCurrentRound(index ?? 0);
+
+        if (gameMode === "Daily" && dailyTags) {
+            const current = dailyTags[index];
+            setLeftTag(current[0]);
+            setRightTag(current[1]);
+        }
+    }, [currentRound, dailyTags, displayedRoundResults, gameMode, roundResults]);
 
     //initally set tags
     useEffect(() => {
@@ -145,7 +176,6 @@ export default function Game({ posts }: GameProps) {
                 setRightTag(getRandomTag(filteredTags));
             }
         } else {
-            console.log(currentRound);
             if (dailyTags && (leftTag === null || rightTag === null)) {
                 const current = dailyTags[currentRound];
                 setLeftTag(current[0]);
@@ -163,6 +193,17 @@ export default function Game({ posts }: GameProps) {
         displayCharactersCurrentGame,
     ]);
 
+    //timer for next daily
+    useEffect(() => {
+        setTimeLeft(getTimeUntilMidnight());
+
+        const interval = setInterval(() => {
+            setTimeLeft(getTimeUntilMidnight());
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const continueGame = () => {
         setCurrentStreak((prev) => prev + 1);
         if (currentStreak + 1 > (bestStreak ?? 0)) {
@@ -177,20 +218,22 @@ export default function Game({ posts }: GameProps) {
         setShowContinue(false);
     };
 
-    const nextRound = () => {
+    const nextRound = (index?: number, results?: RoundResults) => {
         if (!roundResults || !dailyTags) return;
 
-        const nextRoundIndex = currentRound + 1;
-        setDisplayedRoundResults(roundResults);
-        setIsRevealed(false);
+        setDisplayedRoundResults(results ?? roundResults);
+
         setShowContinue(false);
 
-        if (nextRoundIndex < dailyTags.length) {
-            const current = dailyTags[nextRoundIndex];
+        const newIndex = index ?? currentRound;
+        if (newIndex < dailyTags.length) {
+            setIsRevealed(false);
+            const current = dailyTags[newIndex];
             setLeftTag(current[0]);
             setRightTag(current[1]);
-            setCurrentRound(nextRoundIndex);
+            setCurrentRound(newIndex);
         } else {
+            setIsViewingRound(true);
             // todo finished daily
         }
     };
@@ -220,18 +263,20 @@ export default function Game({ posts }: GameProps) {
                 }, SHOW_ANSWER_TIME_MS);
             }
         } else {
-            if (roundResults) {
-                const newResults = [...roundResults.results];
-                newResults[currentRound] = wasCorrect ? "c" : "i";
-                const newRoundResults = { ...roundResults, results: newResults };
-                setRoundResults(newRoundResults);
-            }
+            if (!roundResults) return;
+
+            const newResults = [...roundResults.results];
+            newResults[currentRound] = wasCorrect ? "c" : "i";
+            const newRoundResults = { ...roundResults, results: newResults };
+            setRoundResults(newRoundResults);
+            setCurrentRound(currentRound + 1);
 
             timeoutRef.current = setTimeout(() => {
                 if (pause) {
                     setShowContinue(true);
                 } else {
-                    nextRound();
+                    // if round proceeds automatically, the states aren't updated yet for nextRound()
+                    nextRound(currentRound + 1, newRoundResults);
                 }
             }, SHOW_ANSWER_TIME_MS);
         }
@@ -244,9 +289,11 @@ export default function Game({ posts }: GameProps) {
 
         if (mode === "Endless") {
             restartRound();
+            setShowFinishedModal(false);
         } else {
             if (!dailyTags) return;
 
+            setShowGameOverModal(false);
             if (currentRound === MAX_ROUNDS - 1) {
                 // setIsViewingRound(true);
                 setIsRevealed(true);
@@ -255,6 +302,7 @@ export default function Game({ posts }: GameProps) {
             }
 
             setShowContinue(false);
+            setDisplayedRoundResults(roundResults);
 
             const current = dailyTags[currentRound];
             setLeftTag(current[0]);
@@ -280,6 +328,51 @@ export default function Game({ posts }: GameProps) {
         }
         setLeftTag(newLeftTag);
         setRightTag(newRightTag);
+    };
+
+    const copyScore = () => {
+        const text = [];
+        text.push(
+            `e621dle Daily - ${new Date().toISOString().split("T")[0]} - ${
+                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
+            }/${MAX_ROUNDS}`
+        );
+        text.push(roundResults?.results.map((r) => (r === "c" ? "🟩" : "🟥")).join(""));
+        text.push("");
+        text.push(URL);
+
+        if (!navigator.clipboard) {
+            // fallback for older browsers
+            const textarea = document.createElement("textarea");
+            textarea.value = text.join("\n");
+            textarea.style.position = "fixed"; // prevent scrolling to bottom
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+
+            try {
+                document.execCommand("copy");
+                setCopyText("Copied!");
+                setTimeout(() => {
+                    setCopyText(SHARE_SCORE);
+                }, 3000);
+            } catch (err) {
+                console.error("Failed to copy: ", err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+            return;
+        }
+
+        navigator.clipboard
+            .writeText(text.join("\n"))
+            .then(() => {
+                setCopyText("Copied!");
+                setTimeout(() => {
+                    setCopyText(SHARE_SCORE);
+                }, 3000);
+            })
+            .catch((err) => console.error("Failed to copy: ", err));
     };
 
     const handleAdultWarning = (selectedChoice: boolean) => {
@@ -393,16 +486,54 @@ export default function Game({ posts }: GameProps) {
             )}
 
             <Footer date={date} />
-            <Modal isRevealed={showGameOverModal} onClose={() => setShowGameOverModal(false)}>
-                <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
-                <h1 className="text-lg">You guessed incorrectly!</h1>
-                <button
-                    onClick={() => restartRound()}
-                    className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
-                >
-                    Play Again
-                </button>
-            </Modal>
+            {gameMode === "Endless" ? (
+                <Modal isRevealed={showGameOverModal} onClose={() => setShowGameOverModal(false)}>
+                    <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
+                    <h1 className="text-lg">You guessed incorrectly!</h1>
+                    <button
+                        onClick={() => restartRound()}
+                        className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
+                    >
+                        Play Again
+                    </button>
+                </Modal>
+            ) : (
+                <Modal isRevealed={showFinishedModal} onClose={() => setShowFinishedModal(false)}>
+                    <div className="flex flex-col items-center gap-3">
+                        <h2 className="pb-2 text-3xl font-bold">Daily Complete!</h2>
+                        <div>
+                            <p className="font-bold text-xl">{`Your score: ${
+                                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
+                            }/${MAX_ROUNDS}`}</p>
+                            <div className="inline-flex">
+                                <Scoreboard gameMode={gameMode} roundResults={roundResults} />
+                            </div>
+                        </div>
+                        <p>Come back again tomorrow for a new daily challenge!</p>
+                        <div className="">
+                            <p>Next daily in:</p>
+                            <p className="font-bold text-[24px]">{timeLeft}</p>
+                            <p className="italic text-gray-400">(Resets at 12am local time)</p>
+                        </div>
+                    </div>
+                    <span className="flex flex-row gap-2 justify-center">
+                        <button
+                            onClick={() => {
+                                handleGameModeChange("Endless");
+                            }}
+                            className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
+                        >
+                            Play Endless Mode
+                        </button>
+                        <button
+                            onClick={() => copyScore()}
+                            className="font-bold mt-4 px-4 py-2 bg-[#071e32]  hover:bg-[#014995] text-white rounded-lg text-lg transition-colors border-1 border-gray-300 shadow-xl"
+                        >
+                            {copyText}
+                        </button>
+                    </span>
+                </Modal>
+            )}
         </div>
     );
 }
