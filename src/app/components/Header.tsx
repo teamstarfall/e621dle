@@ -16,7 +16,10 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
         <header className="flex flex-row justify-between sm:grid sm:grid-cols-[1fr_auto_1fr] bg-[#0f223d] border-b-1 shadow-md sm:shadow-none sm:bg-transparent sm:border-0 items-center w-full sticky top-0 z-10 px-4 py-2 sm:static mt-0 sm:p-0 sm:mt-6">
             <div className="justify-self-start flex flex-col items-center">
                 <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" />
-                <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} />
+
+                <span className="hidden sm:block">
+                    <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} />
+                </span>
             </div>
             <div className="justify-self-center flex flex-col items-center mx-2">
                 <div className="text-center hidden sm:block sm:pb-4">
@@ -45,12 +48,12 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                     </button>
                 </div>
                 <div className="hidden sm:block">
-                    <Settings gameMode={gameMode} />
+                    <Settings gameMode={gameMode} setGameMode={setGameMode} />
                 </div>
             </div>
 
             <Modal isRevealed={showSettings} onClose={() => setShowSettings(false)}>
-                <Settings gameMode={gameMode} />
+                <Settings gameMode={gameMode} setGameMode={setGameMode} />
             </Modal>
         </header>
     );
