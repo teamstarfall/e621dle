@@ -295,7 +295,8 @@ export default function Game({ posts }: GameProps) {
 
             setShowGameOverModal(false);
             if (currentRound === MAX_ROUNDS - 1) {
-                // setIsViewingRound(true);
+                setIsViewingRound(true);
+                setShowFinishedModal(true);
                 setIsRevealed(true);
             } else {
                 setIsRevealed(false);
