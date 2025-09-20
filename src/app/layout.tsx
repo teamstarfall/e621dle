@@ -18,8 +18,11 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
+        site: "@angelolz1",
         creator: "@angelolz1",
-        images: "https://e621dle.starfall.team/preview.png",
+        title: "e621dle",
+        description: "A game where you guess which furry tag has the most posts!",
+        images: [{ url: "https://e621dle.starfall.team/preview.png" }],
     },
 };
 
