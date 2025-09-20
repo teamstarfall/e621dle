@@ -2,26 +2,7 @@ import { TagCardProps as TagCardProps, ImagePreviews } from "../interfaces";
 import { useEffect, useMemo, useState } from "react";
 import ImageCard from "./ImageCard";
 import ImageViewer from "./ImageViewer";
-
-function AnimatedNumber({
-    isRevealed,
-    animatedCount,
-    tagCount,
-}: {
-    isRevealed: boolean;
-    animatedCount?: number;
-    tagCount: number;
-}) {
-    const displayCount = () => {
-        if (!isRevealed) {
-            return "?";
-        }
-        // If the animation is running, show the animated count, otherwise show the final tag count.
-        return (animatedCount !== undefined ? animatedCount : tagCount).toLocaleString();
-    };
-
-    return <span className="text-[32px] md:text-[42px] font-bold leading-none">{displayCount()}</span>;
-}
+import AnimatedNumber from "./AnimatedCount";
 
 const buttonClasses =
     "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all";
@@ -31,8 +12,8 @@ export default function TagCard({
     handleChoice,
     choice,
     getCategoryName,
-    animatedCount,
     ratingLevel,
+    gameMode,
 }: TagCardProps) {
     const [showImageViewer, setShowImageViewer] = useState(false);
     const sourceLink = useMemo(() => {
@@ -73,7 +54,7 @@ export default function TagCard({
 
             if (md5) {
                 potential.push({
-                    url: `https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
+                    url: `https://static1.e621.net/data/sample/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
                     score: score,
                 });
                 potential.push({
@@ -116,15 +97,20 @@ export default function TagCard({
                         <span className="italic text-[14px] mb-2">{getCategoryName(tag.category)}</span>
                         <div className="flex flex-col mb-[0px]">
                             <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
-                                <ImageCard currentSrc={currentSrc} handleError={handleError} tagName={tag.name} />
+                                <ImageCard
+                                    currentSrc={currentSrc}
+                                    handleError={handleError}
+                                    ratingLevel={ratingLevel}
+                                    tagName={tag.name}
+                                />
                             </span>
                         </div>
-                        {choice === "lower" ? (
+                        {gameMode === "Endless" && choice === "left" ? (
                             <span className="text-[32px] md:text-[42px] font-bold leading-none">
                                 {tag.count.toLocaleString()}
                             </span>
                         ) : (
-                            <AnimatedNumber isRevealed={isRevealed} animatedCount={animatedCount} tagCount={tag.count} />
+                            <AnimatedNumber isRevealed={isRevealed} tag={tag} />
                         )}
                         <span>posts</span>
                     </button>

@@ -1,11 +1,11 @@
-import { useCallback, useSyncExternalStore, type SetStateAction, type Dispatch } from "react";
+import { useCallback, useSyncExternalStore, type SetStateAction, type Dispatch, useMemo } from "react";
 import {
     SETTINGS_ADULT_WARNING,
     SETTINGS_CHARACTER_TAGS_ONLY,
     SETTINGS_PAUSE_BEFORE_NEXT,
     SETTINGS_RATING_LEVEL,
 } from "./constants";
-import { RatingLevel } from "./interfaces";
+import { RatingLevel, RoundResults } from "./interfaces";
 
 function subscribeToLocalStorage(key: string, onStoreChange: () => void) {
     function onStorage(ev: StorageEvent) {
@@ -27,7 +27,7 @@ function subscribeToLocalStorage(key: string, onStoreChange: () => void) {
  * @param {(value: string) => T}[deserialize=JSON.parse] Deserialization function to parse the value from local storage
  * @returns A tuple identical to that of `useState<T>`
  */
-export function useLocalStorage<T extends string | number | boolean>(
+export function useLocalStorage<T extends string | number | boolean | RoundResults>(
     key: string,
     defaultValue: T,
     serialize: (value: T) => string = JSON.stringify,
@@ -37,14 +37,24 @@ export function useLocalStorage<T extends string | number | boolean>(
 
     const subscribe = useCallback((onStoreChange: () => void) => subscribeToLocalStorage(key, onStoreChange), [key]);
 
-    const snapshot = useCallback(() => {
-        const snapshot = localStorage.getItem(key);
-        if (snapshot === null) {
-            return defaultValue;
-        }
+    function createSnapshot<T>(key: string, defaultValue: T, deserialize: (value: string) => T) {
+        let lastRaw: string | null = null;
+        let lastValue: T = defaultValue;
 
-        return deserialize(snapshot);
-    }, [key, deserialize, defaultValue]);
+        return () => {
+            const raw = localStorage.getItem(key);
+            if (raw === null) {
+                return defaultValue;
+            }
+            if (raw !== lastRaw) {
+                lastRaw = raw;
+                lastValue = deserialize(raw);
+            }
+            return lastValue;
+        };
+    }
+
+    const snapshot = useMemo(() => createSnapshot(key, defaultValue, deserialize), [key, defaultValue, deserialize]);
 
     const serverSnapshot = useCallback(() => null, []);
 

@@ -34,16 +34,15 @@ export interface Ratings {
     safe: boolean;
 }
 
-export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
-
 export interface TagCardProps {
     tag: Tag | null;
     isRevealed: boolean;
-    handleChoice: (choice: "higher" | "lower") => void;
-    choice: "higher" | "lower";
+    handleChoice: (choice: Choice) => void;
+    choice: Choice;
     getCategoryName: (category: number) => string;
     animatedCount?: number;
     ratingLevel: RatingLevel;
+    gameMode: GameMode;
 }
 
 export interface ModalProps {
@@ -67,11 +66,42 @@ export interface GameProps {
 }
 
 export interface GameModeProps {
-    gameMode: "Daily" | "Endless";
-    setGameMode: (mode: "Daily" | "Endless") => void;
+    gameMode: GameMode;
+    setGameMode: (mode: GameMode) => void;
 }
 
 export interface HeaderProps extends GameModeProps {
     currentStreak: number;
     bestStreak: number;
+    roundResults: RoundResults | null;
 }
+
+export interface ScoreboardProps {
+    gameMode: GameMode;
+    currentStreak?: number;
+    bestStreak?: number;
+    roundResults: RoundResults | null;
+    showProgress?: boolean;
+}
+
+export interface RoundResults {
+    date: string;
+    results: RoundResult[];
+}
+
+export interface AnimatedCountProps {
+    isRevealed: boolean;
+    tag: Tag;
+}
+
+export interface ImageCardProps {
+    currentSrc: { url: string; score: number | undefined };
+    tagName: string;
+    ratingLevel: RatingLevel;
+    handleError: () => void;
+}
+
+export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
+export type RoundResult = "u" | "i" | "c";
+export type GameMode = "Daily" | "Endless";
+export type Choice = "left" | "right";

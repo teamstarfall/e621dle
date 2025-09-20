@@ -2,16 +2,19 @@
 
 import { memo } from "react";
 import Image from "next/image";
+import { ImageCardProps } from "../interfaces";
 
-const ImageCard = memo(function ImageCard({
-    currentSrc,
-    tagName,
-    handleError,
-}: {
-    currentSrc: { url: string; score: number | undefined };
-    tagName: string;
-    handleError: () => void;
-}) {
+const ImageCard = memo(function ImageCard({ currentSrc, tagName, ratingLevel, handleError }: ImageCardProps) {
+    const getMessage = () => {
+        switch (ratingLevel) {
+            case "No Images":
+                return '"No Images" setting is enabled.';
+            case "Safe":
+                return "Couldn't get image (explicit tag).";
+            default:
+                return "Couldn't get image.";
+        }
+    };
     return (
         <>
             {currentSrc ? (
@@ -35,7 +38,7 @@ const ImageCard = memo(function ImageCard({
                             className="object-contain rounded-md h-auto w-36 md:w-48"
                         />
                     </div>
-                    <p className="text-center italic text-gray-500">Couldn&apos;t get image.</p>
+                    <p className="text-center italic text-gray-500">{getMessage()}</p>
                 </div>
             )}
         </>
