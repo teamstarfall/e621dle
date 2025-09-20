@@ -53,19 +53,27 @@ const generateDailyPosts = (tags: Tag[]) => {
 
     while (pairs.length < MAX_ROUNDS && used.size < tags.length) {
         const firstIdx = Math.floor(rand() * tags.length);
-        let secondIdx = Math.floor(rand() * tags.length);
+        if (used.has(firstIdx)) continue;
 
-        //prevent duplicates
-        while (secondIdx === firstIdx) {
-            secondIdx = Math.floor(rand() * tags.length);
+        const firstTag = tags[firstIdx];
+
+        // filter valid candidates
+        const candidates = tags
+            .map((tag, idx) => ({ tag, idx }))
+            .filter(({ tag, idx }) => idx !== firstIdx && !used.has(idx) && Math.abs(firstTag.count - tag.count) < 40000);
+
+        if (candidates.length === 0) {
+            // no valid pair for this firstTag, skip
+            used.add(firstIdx);
+            continue;
         }
 
-        if (used.has(firstIdx) || used.has(secondIdx)) continue;
-
-        pairs.push([tags[firstIdx], tags[secondIdx]]);
+        const { idx: secondIdx } = candidates[Math.floor(rand() * candidates.length)];
+        pairs.push([firstTag, tags[secondIdx]]);
         used.add(firstIdx);
         used.add(secondIdx);
     }
+
     return pairs;
 };
 
@@ -276,6 +284,7 @@ export default function Game({ posts }: GameProps) {
                     setShowContinue(true);
                     if (currentRound + 1 === MAX_ROUNDS) {
                         finalizeDaily();
+                        setDisplayedRoundResults(newRoundResults);
                     }
                 } else {
                     // if round proceeds automatically, the states aren't updated yet for nextRound()
