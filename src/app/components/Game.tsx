@@ -512,7 +512,7 @@ export default function Game({ posts }: GameProps) {
                         <div className="">
                             <p>Next daily in:</p>
                             <p className="font-bold text-[24px]">{timeLeft}</p>
-                            <p className="italic text-gray-400">(Resets at 12am local time)</p>
+                            <p className="italic text-gray-400">(Resets at 12am UTC)</p>
                         </div>
                     </div>
                     <span className="flex flex-row gap-2 justify-center">
