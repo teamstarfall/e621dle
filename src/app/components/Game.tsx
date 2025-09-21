@@ -87,10 +87,11 @@ const initRoundResults = () => {
 
 const getTimeUntilMidnight = () => {
     const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(now.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0); // next day 12:00 AM
-    const timeLeft = tomorrow.getTime() - now.getTime(); // milliseconds
+    const tomorrowUtc = new Date(now);
+    tomorrowUtc.setUTCDate(now.getUTCDate() + 1);
+    tomorrowUtc.setUTCHours(0, 0, 0, 0);
+
+    const timeLeft = tomorrowUtc.getTime() - now.getTime();
 
     const hours = Math.floor(timeLeft / 1000 / 60 / 60)
         .toString()
