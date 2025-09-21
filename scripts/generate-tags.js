@@ -301,7 +301,7 @@ function getTopTagsByCategory(tagsCollection, category, limit) {
 }
 
 function getTodayDate() {
-    return new Date().toISOString.split("T")[0];
+    return new Date().toISOString().split("T")[0];
 }
 
 function shouldProcessPost(line) {
