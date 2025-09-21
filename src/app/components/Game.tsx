@@ -45,6 +45,7 @@ function getCategoryName(category: number) {
 const generateDailyPosts = (tags: Tag[]) => {
     if (!tags) return null;
 
+    console.log("current time: ", new Date().toISOString());
     const seed = xmur3(new Date().toISOString().split("T")[0])();
     const rand = mulberry32(seed);
 
@@ -172,36 +173,6 @@ export default function Game({ posts }: GameProps) {
             setRightTag(current[1]);
         }
     }, [currentRound, dailyTags, displayedRoundResults, gameMode, roundResults]);
-
-    //initally set tags
-    useEffect(() => {
-        if (gameMode === "Endless") {
-            if (displayCharactersCurrentGame === null) {
-                setShowCharactersOnly(characterTagsOnly);
-                return;
-            }
-
-            if (leftTag === null || rightTag === null) {
-                setLeftTag(getRandomTag(filteredTags));
-                setRightTag(getRandomTag(filteredTags));
-            }
-        } else {
-            if (dailyTags && (leftTag === null || rightTag === null)) {
-                const current = dailyTags[currentRound];
-                setLeftTag(current[0]);
-                setRightTag(current[1]);
-            }
-        }
-    }, [
-        characterTagsOnly,
-        currentRound,
-        dailyTags,
-        filteredTags,
-        gameMode,
-        leftTag,
-        rightTag,
-        displayCharactersCurrentGame,
-    ]);
 
     //timer for next daily
     useEffect(() => {

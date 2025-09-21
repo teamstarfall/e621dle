@@ -53,10 +53,13 @@ export default function TagCard({
             const score = tag?.images[rating]?.score;
 
             if (md5) {
-                potential.push({
-                    url: `https://static1.e621.net/data/sample/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
-                    score: score,
-                });
+                if (fileExt !== "gif") {
+                    potential.push({
+                        url: `https://static1.e621.net/data/sample/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.jpg`,
+                        score: score,
+                    });
+                }
+
                 potential.push({
                     url: `https://static1.e621.net/data/${md5.substring(0, 2)}/${md5.substring(2, 4)}/${md5}.${fileExt}`,
                     score: score,
