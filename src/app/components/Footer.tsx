@@ -38,6 +38,15 @@ export default function Footer({ date }: FooterProps) {
                     </a>
                     )
                 </span>
+                <span>
+                    Support us{" "}
+                    <b>
+                        <a className="underline" href="https://ko-fi.com/angelolz" target="_blank" rel="noopener noreferrer">
+                            here
+                        </a>
+                        !
+                    </b>
+                </span>
             </span>
 
             {date && <span className="justify-self-end">Data is based on {date}.</span>}

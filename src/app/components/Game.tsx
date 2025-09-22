@@ -11,6 +11,8 @@ import Header from "./Header";
 import Footer from "./Footer";
 import Scoreboard from "./Scoreboard";
 
+const currentUtcDate = new Date().toISOString().split("T")[0];
+
 function getRandomTag(tags: Tag[]): Tag | null {
     if (!tags || tags.length === 0) return null;
     const randomIndex = Math.floor(Math.random() * tags.length);
@@ -46,7 +48,7 @@ const generateDailyPosts = (tags: Tag[]) => {
     if (!tags) return null;
 
     console.log("current time: ", new Date().toISOString());
-    const seed = xmur3(new Date().toISOString().split("T")[0])();
+    const seed = xmur3(currentUtcDate)();
     const rand = mulberry32(seed);
 
     const pairs: [Tag, Tag][] = [];
@@ -80,7 +82,7 @@ const generateDailyPosts = (tags: Tag[]) => {
 
 const initRoundResults = () => {
     return {
-        date: new Date().toISOString().split("T")[0],
+        date: currentUtcDate,
         results: Array(MAX_ROUNDS).fill("u"),
     };
 };
@@ -93,7 +95,7 @@ const getTimeUntilMidnight = () => {
 
     const timeLeft = tomorrowUtc.getTime() - now.getTime();
 
-    const hours = Math.floor(timeLeft / 1000 / 60 / 60)
+    const hours = Math.floor((timeLeft / 1000 / 60 / 60) % 24)
         .toString()
         .padStart(2, "0");
     const minutes = Math.floor((timeLeft / 1000 / 60) % 60)
@@ -155,25 +157,31 @@ export default function Game({ posts }: GameProps) {
     useEffect(() => {
         if (!roundResults || displayedRoundResults) return; //already init'd
 
-        setDisplayedRoundResults(roundResults);
-
-        let index = roundResults?.results.indexOf("u");
-        if (index === -1) {
-            index = MAX_ROUNDS;
-            setIsViewingRound(true);
-            setIsRevealed(true);
-            setShowFinishedModal(true);
-            setShowContinue(true);
+        let index = 0;
+        if (roundResults.date !== currentUtcDate) {
+            const newRoundResults = initRoundResults();
+            setRoundResults(newRoundResults);
+            setDisplayedRoundResults(newRoundResults);
+        } else {
+            index = roundResults?.results.indexOf("u");
+            if (index === -1) {
+                index = MAX_ROUNDS;
+                setIsViewingRound(true);
+                setIsRevealed(true);
+                setShowFinishedModal(true);
+                setShowContinue(true);
+            }
+            setDisplayedRoundResults(roundResults);
         }
 
-        setCurrentRound(index ?? 0);
+        setCurrentRound(index);
 
         if (gameMode === "Daily" && dailyTags) {
             const current = dailyTags[Math.min(index, MAX_ROUNDS - 1)];
             setLeftTag(current[0]);
             setRightTag(current[1]);
         }
-    }, [currentRound, dailyTags, displayedRoundResults, gameMode, roundResults]);
+    }, [dailyTags, displayedRoundResults, gameMode, roundResults, setRoundResults]);
 
     //timer for next daily
     useEffect(() => {
@@ -317,7 +325,7 @@ export default function Game({ posts }: GameProps) {
     const copyScore = () => {
         const text = [];
         text.push(
-            `e621dle Daily - ${new Date().toISOString().split("T")[0]} - ${
+            `e621dle Daily - ${currentUtcDate} - ${
                 roundResults?.results.filter((r) => r.includes("c")).length ?? 0
             }/${MAX_ROUNDS}`
         );
