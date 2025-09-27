@@ -25,6 +25,9 @@ export const metadata: Metadata = {
         description: "A game where you guess which furry tag has the most posts!",
         images: [{ url: "https://e621dle.starfall.team/preview.png" }],
     },
+    verification: {
+        google: "_CD5zYRKx9u1EoSliNztITWoV_T6FjVH1ynbN6q1l-M",
+    },
 };
 
 export default function RootLayout({
