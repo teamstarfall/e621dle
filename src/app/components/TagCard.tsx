@@ -92,21 +92,21 @@ export default function TagCard({
                 >
                     <button
                         type="button"
-                        className="flex flex-col"
+                        className="flex flex-col items-center"
                         onClick={() => handleChoice(choice)}
                         disabled={isRevealed}
                     >
-                        <span className="font-bold text-[24px] break-all">{tag.name}</span>
+                        <span className="font-bold text-[24px] break-all text-center">{tag.name}</span>
                         <span className="italic text-[14px] mb-2">{getCategoryName(tag.category)}</span>
-                        <div className="flex flex-col mb-[0px]">
-                            <span className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
+                        <div className="flex flex-col mb-[0px] w-full">
+                            <div className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
                                 <ImageCard
                                     currentSrc={currentSrc}
                                     handleError={handleError}
                                     ratingLevel={ratingLevel}
                                     tagName={tag.name}
                                 />
-                            </span>
+                            </div>
                         </div>
                         {gameMode === "Endless" && choice === "left" ? (
                             <span className="text-[32px] md:text-[42px] font-bold leading-none">
