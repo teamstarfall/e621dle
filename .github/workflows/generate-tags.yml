@@ -3,7 +3,7 @@ name: Generate and Commit Tags
 on:
     workflow_dispatch:
     schedule:
-        - cron: "45 11 * * 0"
+        - cron: "45 23 * * 0"
     push:
         branches:
             - "dev"
