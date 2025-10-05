@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
 import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHARE_SCORE, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT, URL } from "../constants";
 import { useLocalStorage, useSettings } from "../storage";
-import { mulberry32, xmur3 } from "../utils/rng";
 import TagCard from "./TagCard";
 import Modal from "./Modal";
 import Header from "./Header";
@@ -44,42 +43,6 @@ function getCategoryName(category: number) {
     }
 }
 
-const generateDailyPosts = (tags: Tag[]) => {
-    if (!tags) return null;
-
-    console.log("current time: ", new Date().toISOString());
-    const seed = xmur3(currentUtcDate)();
-    const rand = mulberry32(seed);
-
-    const pairs: [Tag, Tag][] = [];
-    const used = new Set<number>();
-
-    while (pairs.length < MAX_ROUNDS && used.size < tags.length) {
-        const firstIdx = Math.floor(rand() * tags.length);
-        if (used.has(firstIdx)) continue;
-
-        const firstTag = tags[firstIdx];
-
-        // filter valid candidates
-        const candidates = tags
-            .map((tag, idx) => ({ tag, idx }))
-            .filter(({ tag, idx }) => idx !== firstIdx && !used.has(idx) && Math.abs(firstTag.count - tag.count) < 40000);
-
-        if (candidates.length === 0) {
-            // no valid pair for this firstTag, skip
-            used.add(firstIdx);
-            continue;
-        }
-
-        const { idx: secondIdx } = candidates[Math.floor(rand() * candidates.length)];
-        pairs.push([firstTag, tags[secondIdx]]);
-        used.add(firstIdx);
-        used.add(secondIdx);
-    }
-
-    return pairs;
-};
-
 const initRoundResults = () => {
     return {
         date: currentUtcDate,
@@ -108,9 +71,10 @@ const getTimeUntilMidnight = () => {
     return `${hours}:${minutes}:${seconds}`;
 };
 
-export default function Game({ posts }: GameProps) {
+export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     const { tags, date } = use(posts);
-    const dailyTags = useMemo(() => generateDailyPosts(tags), [tags]);
+    const dailyTags = use(dailyChallenge);
+    const stats = use(dailyStats);
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
@@ -177,7 +141,7 @@ export default function Game({ posts }: GameProps) {
         setCurrentRound(index);
 
         if (gameMode === "Daily" && dailyTags) {
-            const current = dailyTags[Math.min(index, MAX_ROUNDS - 1)];
+            const current = dailyTags.tags[Math.min(index, MAX_ROUNDS - 1)];
             setLeftTag(current[0]);
             setRightTag(current[1]);
         }
@@ -215,9 +179,9 @@ export default function Game({ posts }: GameProps) {
         setShowContinue(false);
 
         const newIndex = index ?? currentRound;
-        if (newIndex < dailyTags.length) {
+        if (newIndex < dailyTags.tags.length) {
             setIsRevealed(false);
-            const current = dailyTags[newIndex];
+            const current = dailyTags.tags[newIndex];
             setLeftTag(current[0]);
             setRightTag(current[1]);
             setCurrentRound(newIndex);
@@ -259,6 +223,10 @@ export default function Game({ posts }: GameProps) {
             setRoundResults(newRoundResults);
             setCurrentRound(currentRound + 1);
 
+            if (currentRound + 1 === MAX_ROUNDS) {
+                //todo submit score
+            }
+
             timeoutRef.current = setTimeout(() => {
                 if (pause) {
                     setShowContinue(true);
@@ -296,7 +264,7 @@ export default function Game({ posts }: GameProps) {
 
             setDisplayedRoundResults(roundResults);
 
-            const current = dailyTags[Math.min(currentRound, MAX_ROUNDS - 1)];
+            const current = dailyTags.tags[Math.min(currentRound, MAX_ROUNDS - 1)];
             setLeftTag(current[0]);
             setRightTag(current[1]);
         }
@@ -320,6 +288,13 @@ export default function Game({ posts }: GameProps) {
         }
         setLeftTag(newLeftTag);
         setRightTag(newRightTag);
+    };
+
+    const getCurrentAverage = () => {
+        return (
+            (roundResults?.results.filter((r) => r.includes("c")).length ?? 0 + stats.totalScore) /
+            (stats.totalChallenges + 1)
+        );
     };
 
     const copyScore = () => {
@@ -493,7 +468,7 @@ export default function Game({ posts }: GameProps) {
                 </div>
             )}
 
-            <Footer date={date} />
+            <Footer date={gameMode === "Endless" ? date : dailyTags.dataDate} />
             {gameMode === "Endless" ? (
                 <Modal isRevealed={showGameOverModal} onClose={() => setShowGameOverModal(false)}>
                     <h2 className="pb-2 text-3xl font-bold">Game Over!</h2>
@@ -510,9 +485,20 @@ export default function Game({ posts }: GameProps) {
                     <div className="flex flex-col items-center gap-3">
                         <h2 className="pb-2 text-3xl font-bold">Daily Complete!</h2>
                         <div>
-                            <p className="font-bold text-xl">{`Your score: ${
-                                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
-                            }/${MAX_ROUNDS}`}</p>
+                            <div className="flex flex-row">
+                                <span>
+                                    <p className="font-bold text-xl">{`Your score: ${
+                                        roundResults?.results.filter((r) => r.includes("c")).length ?? 0
+                                    }/${MAX_ROUNDS}`}</p>
+                                </span>
+                                <span>
+                                    <p className="font-bold text-xl">{`Average score: ${
+                                        stats.totalScore / stats.totalChallenges
+                                    }/${MAX_ROUNDS}`}</p>
+                                    based on {stats.totalScore} games
+                                </span>
+                            </div>
+
                             <div className="inline-flex">
                                 <Scoreboard gameMode={gameMode} roundResults={roundResults} />
                             </div>

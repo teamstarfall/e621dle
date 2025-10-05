@@ -63,6 +63,8 @@ export interface ErrorBoundaryProps {
 
 export interface GameProps {
     posts: Promise<TagResponse>;
+    dailyChallenge: Promise<DailyChallenge>;
+    dailyStats: Promise<DailyStats>;
 }
 
 export interface GameModeProps {
@@ -99,6 +101,17 @@ export interface ImageCardProps {
     tagName: string;
     ratingLevel: RatingLevel;
     handleError: () => void;
+}
+
+export interface DailyChallenge {
+    dailyDate: string;
+    dataDate: string;
+    tags: [Tag, Tag][];
+}
+
+export interface DailyStats {
+    totalScore: number;
+    totalChallenges: number;
 }
 
 export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
