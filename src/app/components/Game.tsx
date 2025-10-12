@@ -324,20 +324,17 @@ export default function Game({ posts }: GameProps) {
 
     const copyScore = () => {
         const text = [];
-        text.push(
-            `e621dle Daily - ${currentUtcDate} - ${
-                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
-            }/${MAX_ROUNDS}`
-        );
+        const correctAnswers = roundResults?.results.filter((r) => r.includes("c")).length ?? 0;
+        const scoreText = correctAnswers === MAX_ROUNDS ? "👑" : `${correctAnswers}/${MAX_ROUNDS}`;
+        text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText}`);
         text.push(roundResults?.results.map((r) => (r === "c" ? "🟩" : "🟥")).join(""));
         text.push("");
         text.push(URL);
 
         if (!navigator.clipboard) {
-            // fallback for older browsers
             const textarea = document.createElement("textarea");
             textarea.value = text.join("\n");
-            textarea.style.position = "fixed"; // prevent scrolling to bottom
+            textarea.style.position = "fixed";
             document.body.appendChild(textarea);
             textarea.focus();
             textarea.select();
@@ -373,6 +370,15 @@ export default function Game({ posts }: GameProps) {
         setIsRevealed(true);
         setShowContinue(true);
         setDisplayedRoundResults(roundResults);
+    };
+
+    const getResultsText = () => {
+        const correctAnswers = roundResults?.results.filter((r) => r.includes("c")).length ?? 0;
+        if (correctAnswers === MAX_ROUNDS) {
+            return "Perfect Score!";
+        } else {
+            return `Your score: ${correctAnswers}/${MAX_ROUNDS}`;
+        }
     };
 
     const handleAdultWarning = (selectedChoice: boolean) => {
@@ -510,9 +516,7 @@ export default function Game({ posts }: GameProps) {
                     <div className="flex flex-col items-center gap-3">
                         <h2 className="pb-2 text-3xl font-bold">Daily Complete!</h2>
                         <div>
-                            <p className="font-bold text-xl">{`Your score: ${
-                                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
-                            }/${MAX_ROUNDS}`}</p>
+                            <p className="font-bold text-xl">{getResultsText()}</p>
                             <div className="inline-flex">
                                 <Scoreboard gameMode={gameMode} roundResults={roundResults} />
                             </div>
