@@ -9,3 +9,7 @@ export async function GET() {
         return new Response("Error fetching daily stats", { status: 500 });
     }
 }
+
+export async function POST() {
+    
+}
