@@ -5,7 +5,8 @@ import path from "node:path";
 import fs, { writeFile } from "node:fs/promises";
 import { createClient } from "redis";
 import { mulberry32, xmur3 } from "./utils/rng";
-import { MAX_ROUNDS } from "./constants";
+import { MAX_POST_DIFFERENCE_DAILY, MAX_ROUNDS } from "./constants";
+import { decode } from "@msgpack/msgpack";
 
 type Environment = "local" | "preview" | "production";
 
@@ -17,6 +18,10 @@ function getEnvironment(): Environment {
     } else {
         return "local";
     }
+}
+
+function getKey(key: string): string {
+    return `${key}${currentEnvironment !== "production" ? `_${currentEnvironment}` : ""}`;
 }
 
 const currentUtcDate = new Date().toISOString().split("T")[0];
@@ -52,12 +57,13 @@ export async function fetchTags() {
     } else if (currentEnvironment === "preview" || currentEnvironment === "production") {
         const url = `https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/${
             currentEnvironment === "production" ? "tags" : "tags.dev"
-        }.json`;
+        }.min.json`;
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) {
             throw new Error(`Failed to fetch tags.json from ${url}`);
         }
-        data = await response.json();
+        const minifiedJson = await response.json();
+        data = decode(minifiedJson) as TagResponse;
     } else {
         throw new Error("Unknown environment");
     }
@@ -66,7 +72,7 @@ export async function fetchTags() {
 }
 
 export async function fetchDaily() {
-    const value = await redis.get("currentDaily");
+    const value = await redis.get(getKey("currentDaily"));
     if (!value) {
         const dailyData = createNewDaily();
         return dailyData;
@@ -82,10 +88,26 @@ export async function fetchDaily() {
 }
 
 export async function fetchDailyStats() {
-    return {
-        totalScore: 0,
-        totalChallenges: 0,
-    };
+    const value = await redis.get(getKey("dailyStats"));
+    if (!value) {
+        const emptyData = {
+            totalScore: 0,
+            totalChallenges: 0,
+        };
+
+        redis.set(getKey("dailyStats"), JSON.stringify(emptyData));
+
+        return emptyData;
+    }
+    return JSON.parse(value);
+}
+
+export async function postDailyStats(score: number) {
+    const stats = await fetchDailyStats();
+    stats.totalScore += score;
+    stats.totalChallenges += 1;
+    await redis.set(getKey("dailyStats"), JSON.stringify(stats));
+    return stats;
 }
 
 async function createNewDaily() {
@@ -101,7 +123,7 @@ async function createNewDaily() {
         tags: dailyTags,
     };
 
-    redis.set("currentDaily", JSON.stringify(data));
+    redis.set(getKey("currentDaily"), JSON.stringify(data));
     return data;
 }
 
@@ -121,7 +143,10 @@ function generateDailyPosts(tags: Tag[]) {
         // filter valid candidates
         const candidates = tags
             .map((tag, idx) => ({ tag, idx }))
-            .filter(({ tag, idx }) => idx !== firstIdx && !used.has(idx) && Math.abs(firstTag.count - tag.count) < 40000);
+            .filter(
+                ({ tag, idx }) =>
+                    idx !== firstIdx && !used.has(idx) && Math.abs(firstTag.count - tag.count) < MAX_POST_DIFFERENCE_DAILY
+            );
 
         if (candidates.length === 0) {
             // no valid pair for this firstTag, skip

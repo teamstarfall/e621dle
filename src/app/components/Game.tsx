@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
 import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHARE_SCORE, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT, URL } from "../constants";
+import { postDailyStats } from "../actions";
 import { useLocalStorage, useSettings } from "../storage";
 import TagCard from "./TagCard";
 import Modal from "./Modal";
@@ -74,7 +75,7 @@ const getTimeUntilMidnight = () => {
 export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     const { tags, date } = use(posts);
     const dailyTags = use(dailyChallenge);
-    const stats = use(dailyStats);
+    const [stats, setStats] = useState(use(dailyStats));
     const [bestStreak, setBestStreak] = useLocalStorage<number>(BEST_STREAK, 0);
 
     // settings
@@ -190,7 +191,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
         }
     };
 
-    const handleChoice = (selectedChoice: Choice) => {
+    const handleChoice = async (selectedChoice: Choice) => {
         if (isRevealed || !leftTag || !rightTag) return;
 
         const wasCorrect =
@@ -224,7 +225,13 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
             setCurrentRound(currentRound + 1);
 
             if (currentRound + 1 === MAX_ROUNDS) {
-                //todo submit score
+                const score = newRoundResults.results.slice(0, MAX_ROUNDS).filter((r) => r === "c").length;
+                try {
+                    const updatedStats = await postDailyStats(score);
+                    setStats(updatedStats);
+                } catch (error) {
+                    console.error("Failed to post daily stats:", error);
+                }
             }
 
             timeoutRef.current = setTimeout(() => {
@@ -291,20 +298,27 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     };
 
     const getCurrentAverage = () => {
-        return (
-            (roundResults?.results.filter((r) => r.includes("c")).length ?? 0 + stats.totalScore) /
-            (stats.totalChallenges + 1)
-        );
+        if (stats.totalChallenges === 0) {
+            return 0;
+        }
+
+        const avg = stats.totalScore / stats.totalChallenges;
+        return Number(avg.toFixed(2));
     };
 
     const copyScore = () => {
         const text = [];
         text.push(
             `e621dle Daily - ${currentUtcDate} - ${
-                roundResults?.results.filter((r) => r.includes("c")).length ?? 0
+                roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0
             }/${MAX_ROUNDS}`
         );
-        text.push(roundResults?.results.map((r) => (r === "c" ? "🟩" : "🟥")).join(""));
+        text.push(
+            roundResults?.results
+                .slice(0, MAX_ROUNDS)
+                .map((r) => (r === "c" ? "🟩" : "🟥"))
+                .join("")
+        );
         text.push("");
         text.push(URL);
 
@@ -488,14 +502,12 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                             <div className="flex flex-row">
                                 <span>
                                     <p className="font-bold text-xl">{`Your score: ${
-                                        roundResults?.results.filter((r) => r.includes("c")).length ?? 0
+                                        roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0
                                     }/${MAX_ROUNDS}`}</p>
                                 </span>
                                 <span>
-                                    <p className="font-bold text-xl">{`Average score: ${
-                                        stats.totalScore / stats.totalChallenges
-                                    }/${MAX_ROUNDS}`}</p>
-                                    based on {stats.totalScore} games
+                                    <p className="font-bold text-xl">{`Average score: ${getCurrentAverage()}/${MAX_ROUNDS}`}</p>
+                                    based on {stats.totalChallenges} games
                                 </span>
                             </div>
 
