@@ -144,7 +144,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
             setRoundResults(newRoundResults);
             setDisplayedRoundResults(newRoundResults);
         } else {
-            index = roundResults?.results.indexOf("u");
+            index = roundResults?.results.slice(0, MAX_ROUNDS).indexOf("u");
             if (index === -1) {
                 index = MAX_ROUNDS;
                 setIsViewingRound(true);
@@ -323,7 +323,12 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
         const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
         const scoreText = correctAnswers === MAX_ROUNDS ? "👑" : `${correctAnswers}/${MAX_ROUNDS}`;
         text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText} ${(dailyStreak ?? 0) > 3 ? `- 🔥${dailyStreak}` : ""}`);
-        text.push(roundResults?.results.map((r) => (r === "c" ? "🟩" : "🟥")).join(""));
+        text.push(
+            roundResults?.results
+                .slice(0, MAX_ROUNDS)
+                .map((r) => (r === "c" ? "🟩" : "🟥"))
+                .join("")
+        );
         text.push("");
         text.push(URL);
 
@@ -396,7 +401,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     };
 
     const getResultsText = () => {
-        const correctAnswers = roundResults?.results.filter((r) => r.includes("c")).length ?? 0;
+        const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
         if (correctAnswers === MAX_ROUNDS) {
             return "👑 Perfect Score! 👑";
         } else {
