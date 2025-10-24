@@ -406,9 +406,9 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
 
     const getStreakText = () => {
         if (brokeDailyStreak && lastDailyStreak > 3) {
-            return `💔 Streak of ${lastDailyStreak} broken!`;
+            return `💔 Streak of ${lastDailyStreak} broken! 💔`;
         } else {
-            return `🔥 Current Streak: ${dailyStreak}`;
+            return `🔥 Current Streak: ${dailyStreak} 🔥`;
         }
     };
 
@@ -546,12 +546,17 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                 <Modal isRevealed={showFinishedModal} onClose={() => setShowFinishedModal(false)}>
                     <div className="flex flex-col items-center gap-3">
                         <h2 className="pb-2 text-3xl font-bold">Daily Complete!</h2>
-                        <div>
+                        <div className="flex flex-col gap-2">
                             <p className="font-bold text-xl">{getResultsText()}</p>
                             <div className="inline-flex">
                                 <Scoreboard gameMode={gameMode} roundResults={roundResults} />
                             </div>
+                            <span>
+                                <p className="font-bold text-xl">{`Average score: ${getCurrentAverage()}/${MAX_ROUNDS}`}</p>
+                                <i className="text-gray-400">based on {stats.totalChallenges} game(s)</i>
+                            </span>
                         </div>
+                        <hr className="w-full text-gray-400"></hr>
                         <p>Come back again tomorrow for a new daily challenge!</p>
                         <p className="font-bold text-xl">{getStreakText()}</p>
                         <div className="">
