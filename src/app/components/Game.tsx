@@ -2,7 +2,17 @@
 
 import { useState, useEffect, useMemo, use, useRef } from "react";
 import { Tag, GameProps, RoundResults, GameMode, Choice } from "../interfaces";
-import { BEST_STREAK, DAILY_GAME, MAX_ROUNDS, SHARE_SCORE, SHOW_ANSWER_TIME_MS, WHICH_TAG_TEXT, URL } from "../constants";
+import {
+    BEST_STREAK,
+    DAILY_GAME,
+    MAX_ROUNDS,
+    SHARE_SCORE,
+    SHOW_ANSWER_TIME_MS,
+    WHICH_TAG_TEXT,
+    URL,
+    DAILY_STREAK,
+    LAST_DAILY_FINISHED,
+} from "../constants";
 import { postDailyStats } from "../actions";
 import { useLocalStorage, useSettings } from "../storage";
 import TagCard from "./TagCard";
@@ -12,6 +22,7 @@ import Footer from "./Footer";
 import Scoreboard from "./Scoreboard";
 
 const currentUtcDate = new Date().toISOString().split("T")[0];
+const yesterdayUtcDate = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
 function getRandomTag(tags: Tag[]): Tag | null {
     if (!tags || tags.length === 0) return null;
@@ -101,6 +112,10 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     //daily states
+    const [lastDailyStreak, setLastDailyStreak] = useState(1);
+    const [brokeDailyStreak, setBrokeDailyStreak] = useState(false);
+    const [dailyStreak, setDailyStreak] = useLocalStorage<number>(DAILY_STREAK, 0);
+    const [lastDailyFinished, setLastDailyFinished] = useLocalStorage<string>(LAST_DAILY_FINISHED, currentUtcDate);
     const [isViewingRound, setIsViewingRound] = useState(false);
     const [roundResults, setRoundResults] = useLocalStorage<RoundResults>(DAILY_GAME, initRoundResults());
     const [displayedRoundResults, setDisplayedRoundResults] = useState<RoundResults | null>(null);
@@ -108,6 +123,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
     const [showFinishedModal, setShowFinishedModal] = useState(false);
     const [timeLeft, setTimeLeft] = useState<string | null>(null);
     const [copyText, setCopyText] = useState(SHARE_SCORE);
+    const [processedDaily, setProcessedDaily] = useState(false);
 
     //stop animation when changing game modes
     useEffect(() => {
@@ -135,6 +151,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                 setIsRevealed(true);
                 setShowFinishedModal(true);
                 setShowContinue(true);
+                setProcessedDaily(true);
             }
             setDisplayedRoundResults(roundResults);
         }
@@ -225,13 +242,8 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
             setCurrentRound(currentRound + 1);
 
             if (currentRound + 1 === MAX_ROUNDS) {
-                const score = newRoundResults.results.slice(0, MAX_ROUNDS).filter((r) => r === "c").length;
-                try {
-                    const updatedStats = await postDailyStats(score);
-                    setStats(updatedStats);
-                } catch (error) {
-                    console.error("Failed to post daily stats:", error);
-                }
+                updateStreak();
+                updateStats(newRoundResults);
             }
 
             timeoutRef.current = setTimeout(() => {
@@ -308,25 +320,17 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
 
     const copyScore = () => {
         const text = [];
-        text.push(
-            `e621dle Daily - ${currentUtcDate} - ${
-                roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0
-            }/${MAX_ROUNDS}`
-        );
-        text.push(
-            roundResults?.results
-                .slice(0, MAX_ROUNDS)
-                .map((r) => (r === "c" ? "🟩" : "🟥"))
-                .join("")
-        );
+        const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
+        const scoreText = correctAnswers === MAX_ROUNDS ? "👑" : `${correctAnswers}/${MAX_ROUNDS}`;
+        text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText} ${(dailyStreak ?? 0) > 3 ? `- 🔥${dailyStreak}` : ""}`);
+        text.push(roundResults?.results.map((r) => (r === "c" ? "🟩" : "🟥")).join(""));
         text.push("");
         text.push(URL);
 
         if (!navigator.clipboard) {
-            // fallback for older browsers
             const textarea = document.createElement("textarea");
             textarea.value = text.join("\n");
-            textarea.style.position = "fixed"; // prevent scrolling to bottom
+            textarea.style.position = "fixed";
             document.body.appendChild(textarea);
             textarea.focus();
             textarea.select();
@@ -356,12 +360,56 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
             .catch((err) => console.error("Failed to copy: ", err));
     };
 
+    const updateStreak = () => {
+        if (processedDaily) return;
+
+        //increment daily
+        if (lastDailyFinished !== yesterdayUtcDate) {
+            setLastDailyStreak(dailyStreak ?? 0);
+            setDailyStreak(1);
+            setBrokeDailyStreak(true);
+        } else {
+            setDailyStreak((dailyStreak ?? 0) + 1);
+        }
+
+        setLastDailyFinished(currentUtcDate);
+        setProcessedDaily(true);
+    };
+
+    const updateStats = async (roundResults: RoundResults) => {
+        const score = roundResults.results.slice(0, MAX_ROUNDS).filter((r) => r === "c").length;
+        try {
+            const updatedStats = await postDailyStats(score);
+            setStats(updatedStats);
+        } catch (error) {
+            console.error("Failed to post daily stats:", error);
+        }
+    };
+
     const finalizeDaily = () => {
         setIsViewingRound(true);
         setShowFinishedModal(true);
         setIsRevealed(true);
         setShowContinue(true);
         setDisplayedRoundResults(roundResults);
+        setProcessedDaily(true);
+    };
+
+    const getResultsText = () => {
+        const correctAnswers = roundResults?.results.filter((r) => r.includes("c")).length ?? 0;
+        if (correctAnswers === MAX_ROUNDS) {
+            return "👑 Perfect Score! 👑";
+        } else {
+            return `Your score: ${correctAnswers}/${MAX_ROUNDS}`;
+        }
+    };
+
+    const getStreakText = () => {
+        if (brokeDailyStreak && lastDailyStreak > 3) {
+            return `💔 Streak of ${lastDailyStreak} broken!`;
+        } else {
+            return `🔥 Current Streak: ${dailyStreak}`;
+        }
     };
 
     const handleAdultWarning = (selectedChoice: boolean) => {
@@ -499,23 +547,13 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                     <div className="flex flex-col items-center gap-3">
                         <h2 className="pb-2 text-3xl font-bold">Daily Complete!</h2>
                         <div>
-                            <div className="flex flex-row">
-                                <span>
-                                    <p className="font-bold text-xl">{`Your score: ${
-                                        roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0
-                                    }/${MAX_ROUNDS}`}</p>
-                                </span>
-                                <span>
-                                    <p className="font-bold text-xl">{`Average score: ${getCurrentAverage()}/${MAX_ROUNDS}`}</p>
-                                    based on {stats.totalChallenges} games
-                                </span>
-                            </div>
-
+                            <p className="font-bold text-xl">{getResultsText()}</p>
                             <div className="inline-flex">
                                 <Scoreboard gameMode={gameMode} roundResults={roundResults} />
                             </div>
                         </div>
                         <p>Come back again tomorrow for a new daily challenge!</p>
+                        <p className="font-bold text-xl">{getStreakText()}</p>
                         <div className="">
                             <p>Next daily in:</p>
                             <p className="font-bold text-[24px]">{timeLeft}</p>
