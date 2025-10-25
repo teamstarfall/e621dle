@@ -1,5 +1,4 @@
 export async function postDailyStats(score: number) {
-    console.log("post daily stats called");
     if (typeof window !== "undefined") {
         const response = await fetch("/api/daily-stats", {
             method: "POST",

@@ -3,21 +3,22 @@ import "server-only";
 import { DailyChallenge, Tag, TagResponse } from "./interfaces";
 import path from "node:path";
 import fs, { writeFile } from "node:fs/promises";
-import { createClient } from "redis";
+import { RedisClientType, createClient } from "redis";
 import { mulberry32, xmur3 } from "./utils/rng";
 import { MAX_POST_DIFFERENCE_DAILY, MAX_ROUNDS } from "./constants";
 import { decode } from "@msgpack/msgpack";
+import { getEnvironment } from "./utils/utils";
 
-type Environment = "local" | "preview" | "production";
+let redisClient: RedisClientType;
 
-function getEnvironment(): Environment {
-    if (process.env.VERCEL_ENV === "production") {
-        return "production";
-    } else if (process.env.VERCEL_ENV === "preview") {
-        return "preview";
-    } else {
-        return "local";
+async function getRedisClient() {
+    if (!redisClient) {
+        redisClient = createClient({ url: process.env.REDIS_URL });
+        await redisClient.connect();
+    } else if (!redisClient.isOpen) {
+        await redisClient.connect();
     }
+    return redisClient;
 }
 
 function getKey(key: string): string {
@@ -26,52 +27,45 @@ function getKey(key: string): string {
 
 const currentUtcDate = new Date().toISOString().split("T")[0];
 const currentEnvironment = getEnvironment();
-const redis = await createClient({ url: process.env.REDIS_URL }).connect();
 
 export async function fetchTags() {
-    let data: TagResponse;
-
     if (currentEnvironment === "local") {
         const filePath = path.join(process.cwd(), "resources", "tags.dev.json");
         try {
             const fileContents = await fs.readFile(filePath, "utf8");
-            data = JSON.parse(fileContents);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            if (error.code === "ENOENT") {
-                console.log("Local tags.json not found, fetching from remote...");
-                const response = await fetch(
-                    "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.dev.json",
-                    { cache: "no-store" }
-                );
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
-                }
+            return JSON.parse(fileContents);
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 
-                data = await response.json();
-                await writeFile(filePath, JSON.stringify(data, null, 2));
-            } else {
-                throw error;
+            console.log("Local tags.json not found, fetching from remote...");
+            const response = await fetch(
+                "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.dev.json",
+                { cache: "no-store" }
+            );
+            if (!response.ok) {
+                throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
             }
+
+            const data = await response.json();
+            await writeFile(filePath, JSON.stringify(data, null, 2));
+            return data;
         }
-    } else if (currentEnvironment === "preview" || currentEnvironment === "production") {
-        const url = `https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/${
-            currentEnvironment === "production" ? "tags" : "tags.dev"
-        }.min.json`;
-        const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch tags.json from ${url}`);
-        }
-        const minifiedJson = await response.json();
-        data = decode(minifiedJson) as TagResponse;
-    } else {
-        throw new Error("Unknown environment");
     }
 
-    return data;
+    const tagName = currentEnvironment === "production" ? "tags" : "tags.dev";
+    const url = `https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/${tagName}.min.json`;
+
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch tags.json from ${url}`);
+    }
+
+    const minifiedJson = await response.arrayBuffer();
+    return decode(new Uint8Array(minifiedJson)) as TagResponse;
 }
 
 export async function fetchDaily() {
+    const redis = await getRedisClient();
     const value = await redis.get(getKey("currentDaily"));
     if (!value) {
         const dailyData = createNewDaily();
@@ -88,21 +82,34 @@ export async function fetchDaily() {
 }
 
 export async function fetchDailyStats() {
+    const redis = await getRedisClient();
     const value = await redis.get(getKey("dailyStats"));
-    if (!value) {
+
+    const resetAndReturnStats = async () => {
         const emptyData = {
+            date: currentUtcDate,
             totalScore: 0,
             totalChallenges: 0,
         };
-
-        redis.set(getKey("dailyStats"), JSON.stringify(emptyData));
-
+        await redis.set(getKey("dailyStats"), JSON.stringify(emptyData));
         return emptyData;
+    };
+
+    if (!value) {
+        return await resetAndReturnStats();
     }
-    return JSON.parse(value);
+
+    const stats = JSON.parse(value);
+
+    if (stats.date !== currentUtcDate) {
+        return await resetAndReturnStats();
+    }
+
+    return stats;
 }
 
 export async function postDailyStats(score: number) {
+    const redis = await getRedisClient();
     const stats = await fetchDailyStats();
     stats.totalScore += score;
     stats.totalChallenges += 1;
@@ -111,6 +118,7 @@ export async function postDailyStats(score: number) {
 }
 
 async function createNewDaily() {
+    const redis = await getRedisClient();
     const posts = await fetchTags();
     if (!posts || !posts.tags) {
         throw new Error("failed to fetch tags");
@@ -123,7 +131,7 @@ async function createNewDaily() {
         tags: dailyTags,
     };
 
-    redis.set(getKey("currentDaily"), JSON.stringify(data));
+    await redis.set(getKey("currentDaily"), JSON.stringify(data));
     return data;
 }
 

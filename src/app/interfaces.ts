@@ -118,3 +118,4 @@ export type RatingLevel = "Explicit" | "Questionable" | "Safe" | "No Images";
 export type RoundResult = "u" | "i" | "c";
 export type GameMode = "Daily" | "Endless";
 export type Choice = "left" | "right";
+export type Environment = "local" | "preview" | "production";
