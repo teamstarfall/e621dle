@@ -38,7 +38,7 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
                 <div className="flex flex-col items-center gap-1">
                     {showProgress && <div>{`Round ${getRound()} of ${MAX_ROUNDS}`}</div>}
                     <div className="flex flex-row gap-1">
-                        {roundResults?.results.map((value: RoundResult, index: number) => (
+                        {roundResults?.results.slice(0, MAX_ROUNDS).map((value: RoundResult, index: number) => (
                             <span
                                 key={index}
                                 className={`h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] border-1 border-gray-600 rounded-md ${getColorValue(
