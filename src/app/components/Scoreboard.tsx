@@ -1,7 +1,14 @@
 import { MAX_ROUNDS } from "../constants";
 import { RoundResult, ScoreboardProps } from "../interfaces";
 
-export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults, showProgress }: ScoreboardProps) {
+export default function Scoreboard({
+    gameMode,
+    currentStreak,
+    bestStreak,
+    roundResults,
+    showProgress,
+    isViewingRound,
+}: ScoreboardProps) {
     const getColorValue = (value: RoundResult) => {
         switch (value) {
             case "u":
@@ -20,6 +27,7 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
         if (index === -1) return MAX_ROUNDS;
         else return index + 1;
     };
+
     return (
         <div className="flex flex-row items-center px-2 py-1 sm:px-4 sm:py-2 border-1 rounded-xl bg-[#071e32] justify-items-center">
             {gameMode === "Endless" ? (
@@ -36,15 +44,19 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
                 </>
             ) : (
                 <div className="flex flex-col items-center gap-1">
-                    {showProgress && <div>{`Round ${getRound()} of ${MAX_ROUNDS}`}</div>}
-                    <div className="flex flex-row gap-1">
+                    {showProgress && <div>{`${isViewingRound ? "Viewing" : ""} Round ${getRound()} of ${MAX_ROUNDS}`}</div>}
+                    <div className="flex flex-row items-center gap-1">
                         {roundResults?.results.slice(0, MAX_ROUNDS).map((value: RoundResult, index: number) => (
-                            <span
+                            <button
                                 key={index}
-                                className={`h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] border-1 border-gray-600 rounded-md ${getColorValue(
+                                type="button"
+                                disabled={!isViewingRound}
+                                className={`text-center text-[12px] sm:text-[18px] rounded-sm transition-all h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] ${getColorValue(
                                     value
                                 )}`}
-                            />
+                            >
+                                {index < getRound() - 1 ? (value === "c" ? "✔" : "✘") : ""}
+                            </button>
                         ))}
                     </div>
                 </div>

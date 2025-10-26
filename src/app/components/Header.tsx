@@ -31,6 +31,7 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
                     bestStreak={bestStreak}
                     roundResults={roundResults}
                     showProgress
+                    isViewingRound
                 />
             </div>
             <div className="justify-self-end">

@@ -5,7 +5,7 @@ import ImageViewer from "./ImageViewer";
 import AnimatedNumber from "./AnimatedCount";
 
 const buttonClasses =
-    "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all";
+    "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all focus:outline-none focus:ring-4 focus:ring-white";
 export default function TagCard({
     tag,
     isRevealed,
@@ -87,19 +87,19 @@ export default function TagCard({
     return (
         <div className="w-full">
             <div className="group flex flex-col grow">
-                <div
+                <button
+                    type="button"
+                    title="choice button"
+                    tabIndex={0}
+                    disabled={isRevealed}
+                    onClick={() => handleChoice(choice)}
                     className={`flex flex-col gap-[12px] w-full h-full p-1 md:p-6 group-hover:-translate-y-2 ${buttonClasses}`}
                 >
-                    <button
-                        type="button"
-                        className="flex flex-col items-center"
-                        onClick={() => handleChoice(choice)}
-                        disabled={isRevealed}
-                    >
+                    <div className="flex flex-col items-center">
                         <span className="font-bold text-[24px] break-all text-center">{tag.name}</span>
                         <span className="italic text-[14px] mb-2">{getCategoryName(tag.category)}</span>
                         <div className="flex flex-col mb-[0px] w-full">
-                            <div className="relative h-[200px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
+                            <div className="relative h-[150px] md:h-[300px] md:mb-[12px] mb-[6px] rounded-md overflow-hidden">
                                 <ImageCard
                                     currentSrc={currentSrc}
                                     handleError={handleError}
@@ -108,16 +108,18 @@ export default function TagCard({
                                 />
                             </div>
                         </div>
-                        {gameMode === "Endless" && choice === "left" ? (
-                            <span className="text-[32px] md:text-[42px] font-bold leading-none">
-                                {tag.count.toLocaleString()}
-                            </span>
-                        ) : (
-                            <AnimatedNumber isRevealed={isRevealed} tag={tag} />
-                        )}
-                        <span>posts</span>
-                    </button>
-                </div>
+                        <div className="flex flex-row sm:flex-col items-center gap-2 sm:gap-0">
+                            {gameMode === "Endless" && choice === "left" ? (
+                                <span className="text-[32px] md:text-[42px] font-bold leading-none">
+                                    {tag.count.toLocaleString()}
+                                </span>
+                            ) : (
+                                <AnimatedNumber isRevealed={isRevealed} tag={tag} />
+                            )}
+                            <span>posts</span>
+                        </div>
+                    </div>
+                </button>
             </div>
             <span className="flex flex-row gap-2 items-center justify-center pt-3">
                 <button

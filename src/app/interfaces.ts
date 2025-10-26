@@ -84,6 +84,7 @@ export interface ScoreboardProps {
     bestStreak?: number;
     roundResults: RoundResults | null;
     showProgress?: boolean;
+    isViewingRound?: boolean;
 }
 
 export interface RoundResults {

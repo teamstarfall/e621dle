@@ -463,12 +463,12 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                 roundResults={displayedRoundResults}
             />
 
-            <main className="flex flex-col text-center gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
+            <main className="flex flex-col text-center gap-0 sm:gap-4 w-full rounded-xl my-4 sm:my-12 px-4 sm:px-0">
                 {!leftTag || !rightTag ? (
                     <div className="flex items-center justify-center text-center mx-auto">Loading tags...</div>
                 ) : (
                     <div
-                        className={`flex flex-col sm:grid md:grid-cols-[1fr_auto_1fr] gap-4 h-full w-full items-center rounded-xl`}
+                        className={`flex flex-col sm:grid md:grid-cols-[1fr_auto_1fr] gap-2 h-full w-full items-center rounded-xl`}
                     >
                         <span className="inline sm:hidden text-2xl font-bold">{WHICH_TAG_TEXT}</span>
                         <TagCard
@@ -481,7 +481,7 @@ export default function Game({ posts, dailyChallenge, dailyStats }: GameProps) {
                             gameMode={gameMode}
                         />
                         <div className="font-bold sm:my-auto sm:px-4 justify-self-center">
-                            <span className="text-3xl p-0 sm:py-4">or</span>
+                            <span className="hidden sm:inline text-3xl py-4">or</span>
                         </div>
                         <TagCard
                             tag={rightTag}
