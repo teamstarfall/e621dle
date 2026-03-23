@@ -14,17 +14,17 @@ const __dirname = path.dirname(__filename);
 const pipe = promisify(pipeline);
 const branchName = getBranchName();
 const outputFileName = branchName === "main" ? "tags.json" : "tags.dev.json";
-const today = getTodayDate();
+const yesterday = getYesterdayDate();
 const files = [
     {
         name: "posts",
-        url: `https://e621.net/db_export/posts-${today}.csv.gz`,
-        csvPath: `csv/posts-${today}.csv`,
+        url: `https://e621.net/db_export/posts-${yesterday}.csv.gz`,
+        csvPath: `csv/posts-${yesterday}.csv`,
     },
     {
         name: "tags",
-        url: `https://e621.net/db_export/tags-${today}.csv.gz`,
-        csvPath: `csv/tags-${today}.csv`,
+        url: `https://e621.net/db_export/tags-${yesterday}.csv.gz`,
+        csvPath: `csv/tags-${yesterday}.csv`,
     },
 ];
 
@@ -275,7 +275,7 @@ function saveTagsAsJson(topTags) {
     const outputMinPath = path.join(__dirname, "../resources", outputFileName.replace(".json", ".min.json"));
 
     const outputData = {
-        date: getTodayDate(),
+        date: yesterday,
         tags: topTags,
     };
 
@@ -300,8 +300,10 @@ function getTopTagsByCategory(tagsCollection, category, limit) {
         .slice(0, limit);
 }
 
-function getTodayDate() {
-    return new Date().toISOString().split("T")[0];
+function getYesterdayDate() {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split("T")[0];
 }
 
 function shouldProcessPost(line) {
