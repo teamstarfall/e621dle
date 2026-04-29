@@ -62,9 +62,7 @@ export interface ErrorBoundaryProps {
 }
 
 export interface GameProps {
-    posts: Promise<TagResponse>;
     dailyChallenge: Promise<DailyChallenge>;
-    dailyStats: Promise<DailyStats>;
 }
 
 export interface GameModeProps {

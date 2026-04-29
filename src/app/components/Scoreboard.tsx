@@ -2,10 +2,12 @@ import { MAX_ROUNDS } from "../constants";
 import { RoundResult, ScoreboardProps } from "../interfaces";
 
 export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundResults, showProgress }: ScoreboardProps) {
-    const getColorValue = (value: RoundResult) => {
+    const currentRoundIndex = roundResults?.results.indexOf("u") ?? -1;
+
+    const getColorValue = (value: RoundResult, index: number) => {
         switch (value) {
             case "u":
-                return "bg-stone-200";
+                return index === currentRoundIndex ? "bg-stone-400" : "bg-stone-200";
             case "i":
                 return "bg-red-500";
             case "c":
@@ -41,9 +43,7 @@ export default function Scoreboard({ gameMode, currentStreak, bestStreak, roundR
                         {roundResults?.results.slice(0, MAX_ROUNDS).map((value: RoundResult, index: number) => (
                             <span
                                 key={index}
-                                className={`h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] border-1 border-gray-600 rounded-md ${getColorValue(
-                                    value
-                                )}`}
+                                className={`h-[18px] w-[18px] sm:h-[24px] sm:w-[24px] border-1 border-gray-600 rounded-md ${getColorValue(value, index)}`}
                             />
                         ))}
                     </div>

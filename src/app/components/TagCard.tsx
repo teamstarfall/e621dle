@@ -1,12 +1,12 @@
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { TagCardProps as TagCardProps, ImagePreviews } from "../interfaces";
-import { useEffect, useMemo, useState } from "react";
 import ImageCard from "./ImageCard";
 import ImageViewer from "./ImageViewer";
 import AnimatedNumber from "./AnimatedCount";
 
 const buttonClasses =
     "bg-[#071e32] border-gray-300 rounded-xl shadow-xl ring ring-gray-500 hover:border-white hover:ring-4 hover:ring-white hover:bg-[#2e5999] transition-all";
-export default function TagCard({
+const TagCard = ({
     tag,
     isRevealed,
     handleChoice,
@@ -14,7 +14,7 @@ export default function TagCard({
     getCategoryName,
     ratingLevel,
     gameMode,
-}: TagCardProps) {
+}: TagCardProps) => {
     const [showImageViewer, setShowImageViewer] = useState(false);
     const sourceLink = useMemo(() => {
         if (!tag) {
@@ -73,9 +73,9 @@ export default function TagCard({
         setSourceIndex(0);
     }, [sources]);
 
-    const handleError = () => {
+    const handleError = useCallback(() => {
         setSourceIndex((prevIndex) => prevIndex + 1);
-    };
+    }, []);
 
     const [sourceIndex, setSourceIndex] = useState(0);
     const currentSrc = sources[sourceIndex];
@@ -152,4 +152,6 @@ export default function TagCard({
             />
         </div>
     );
-}
+};
+
+export default memo(TagCard);

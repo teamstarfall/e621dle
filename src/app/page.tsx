@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Game from "./components/Game";
 import Spinner from "./components/Spinner";
-import { getDaily, getDailyStats, getTags } from "./fetch";
+import { getDaily } from "./fetch";
 
 function Error() {
     return <div className="w-screen h-screen flex items-center justify-center">Something went wrong.</div>;
@@ -17,14 +17,12 @@ function Loading() {
 }
 
 export default function Home() {
-    const posts = getTags();
     const dailyChallenge = getDaily();
-    const dailyStats = getDailyStats();
 
     return (
         <ErrorBoundary fallback={<Error />}>
             <Suspense fallback={<Loading />}>
-                <Game posts={posts} dailyChallenge={dailyChallenge} dailyStats={dailyStats} />
+                <Game dailyChallenge={dailyChallenge} />
             </Suspense>
         </ErrorBoundary>
     );

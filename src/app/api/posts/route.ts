@@ -5,10 +5,15 @@ import { getEnvironment, getSecondsTillTomorrowUTC } from "@/app/utils/utils";
 
 export async function GET() {
     try {
+        const revalidate = getSecondsTillTomorrowUTC();
         const getCachedTags = unstable_cache(async () => fetchTags(), ["tags", getEnvironment()], {
-            revalidate: getSecondsTillTomorrowUTC(),
+            revalidate,
         });
-        return NextResponse.json(await getCachedTags());
+        return NextResponse.json(await getCachedTags(), {
+            headers: {
+                "Cache-Control": `public, s-maxage=${revalidate}, stale-while-revalidate=3600`,
+            },
+        });
     } catch (error) {
         console.error("Error fetching tags.json:", error);
         return new Response("Error fetching tags.json", { status: 500 });
