@@ -25,8 +25,11 @@ function getKey(key: string): string {
     return `${key}${currentEnvironment !== "production" ? `_${currentEnvironment}` : ""}`;
 }
 
-const currentUtcDate = new Date().toISOString().split("T")[0];
 const currentEnvironment = getEnvironment();
+
+function getCurrentUtcDate() {
+    return new Date().toISOString().split("T")[0];
+}
 
 export async function fetchTags() {
     if (currentEnvironment === "local") {
@@ -67,6 +70,7 @@ export async function fetchTags() {
 export async function fetchDaily() {
     const redis = await getRedisClient();
     const value = await redis.get(getKey("currentDaily"));
+    const currentUtcDate = getCurrentUtcDate();
     if (!value) {
         const dailyData = createNewDaily();
         return dailyData;
@@ -84,6 +88,7 @@ export async function fetchDaily() {
 export async function fetchDailyStats() {
     const redis = await getRedisClient();
     const value = await redis.get(getKey("dailyStats"));
+    const currentUtcDate = getCurrentUtcDate();
 
     const resetAndReturnStats = async () => {
         const emptyData = {
@@ -120,6 +125,7 @@ export async function postDailyStats(score: number) {
 async function createNewDaily() {
     const redis = await getRedisClient();
     const posts = await fetchTags();
+    const currentUtcDate = getCurrentUtcDate();
     if (!posts || !posts.tags) {
         throw new Error("failed to fetch tags");
     }
@@ -136,6 +142,7 @@ async function createNewDaily() {
 }
 
 function generateDailyPosts(tags: Tag[]) {
+    const currentUtcDate = getCurrentUtcDate();
     const seed = xmur3(currentUtcDate)();
     const rand = mulberry32(seed);
 
