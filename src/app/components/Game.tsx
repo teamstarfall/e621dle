@@ -429,7 +429,7 @@ export default function Game({ dailyChallenge }: GameProps) {
     const getResultsText = () => {
         const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
         if (correctAnswers === MAX_ROUNDS) {
-            return "Perfect Score!";
+            return "👑 Perfect Score! 👑";
         } else {
             return `Your score: ${correctAnswers}/${MAX_ROUNDS}`;
         }
@@ -437,9 +437,9 @@ export default function Game({ dailyChallenge }: GameProps) {
 
     const getStreakText = () => {
         if (brokeDailyStreak && lastDailyStreak > 3) {
-            return `Streak of ${lastDailyStreak} broken!`;
+            return `💔 Streak of ${lastDailyStreak} broken! 💔`;
         } else {
-            return `Current Streak: ${dailyStreak}`;
+            return `🔥 Current Streak: ${dailyStreak} 🔥`;
         }
     };
 
