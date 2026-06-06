@@ -344,12 +344,12 @@ export default function Game({ dailyChallenge }: GameProps) {
     const copyScore = () => {
         const text = [];
         const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
-        const scoreText = correctAnswers === MAX_ROUNDS ? "Perfect" : `${correctAnswers}/${MAX_ROUNDS}`;
+        const scoreText = correctAnswers === MAX_ROUNDS ? "👑" : `${correctAnswers}/${MAX_ROUNDS}`;
         text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText} ${(dailyStreak ?? 0) > 3 ? `- Streak ${dailyStreak}` : ""}`);
         text.push(
             roundResults?.results
                 .slice(0, MAX_ROUNDS)
-                .map((r) => (r === "c" ? "C" : "X"))
+                .map((r) => (r === "c" ? "🟩" : "🟥"))
                 .join("")
         );
         text.push("");
