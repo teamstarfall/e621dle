@@ -4,6 +4,9 @@ import Game from "./components/Game";
 import Spinner from "./components/Spinner";
 import { getDaily } from "./fetch";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function Error() {
     return <div className="w-screen h-screen flex items-center justify-center">Something went wrong.</div>;
 }
