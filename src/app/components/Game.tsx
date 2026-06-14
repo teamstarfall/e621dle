@@ -345,7 +345,7 @@ export default function Game({ dailyChallenge }: GameProps) {
         const text = [];
         const correctAnswers = roundResults?.results.slice(0, MAX_ROUNDS).filter((r) => r.includes("c")).length ?? 0;
         const scoreText = correctAnswers === MAX_ROUNDS ? "👑" : `${correctAnswers}/${MAX_ROUNDS}`;
-        text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText} ${(dailyStreak ?? 0) > 3 ? `- Streak ${dailyStreak}` : ""}`);
+        text.push(`e621dle Daily - ${currentUtcDate} - ${scoreText} ${(dailyStreak ?? 0) > 3 ? `- 🔥 ${dailyStreak}` : ""}`);
         text.push(
             roundResults?.results
                 .slice(0, MAX_ROUNDS)
