@@ -18,10 +18,12 @@ const yesterday = getYesterdayDate();
 const files = [
     {
         name: "posts",
+        url: "https://static1.e621.net/data/db_export/posts.csv.gz",
         csvPath: `csv/posts-${yesterday}.csv`,
     },
     {
         name: "tags",
+        url: "https://static1.e621.net/data/db_export/tags.csv.gz",
         csvPath: `csv/tags-${yesterday}.csv`,
     },
 ];
@@ -146,18 +148,12 @@ async function generateTags() {
 
 async function retrieveFiles() {
     try {
-        const exportRes = await fetch("https://e621.net/db_exports.json");
-        if (!exportRes.ok) {
-            throw new Error(`Couldn't fetch URLs. Response status: ${exportRes.status}`);
-        }
-
-        const exportResult = await exportRes.json();
         for (const f of files) {
             console.log(`	Downloading ${f.name}...`);
             if (fs.existsSync(f.csvPath)) {
                 console.log(`	${f.name}.csv already exists, skipping download.`);
             } else {
-                await downloadAndExtract(exportResult, f.name, f.csvPath);
+                await downloadAndExtract(f.url, f.csvPath);
             }
         }
 
@@ -168,20 +164,15 @@ async function retrieveFiles() {
     }
 }
 
-async function downloadAndExtract(exportResult, name, outputPath) {
+async function downloadAndExtract(url, outputPath) {
     const dir = path.dirname(outputPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    
-    const metaObj = exportResult.find((e) => e.name === name);
-    if (!metaObj) {
-        throw new Error("couldn't find metadata info for: " + name);
-    }
 
     return new Promise((resolve, reject) => {
         https
-            .get(metaObj.url, (response) => {
+            .get(url, (response) => {
                 if (response.statusCode !== 200) {
-                    reject(new Error(`Failed to get '${metaObj.url}' (${response.statusCode})`));
+                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
                     return;
                 }
 
