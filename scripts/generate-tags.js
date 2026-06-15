@@ -18,12 +18,10 @@ const yesterday = getYesterdayDate();
 const files = [
     {
         name: "posts",
-        url: `https://e621.net/db_export/posts-${yesterday}.csv.gz`,
         csvPath: `csv/posts-${yesterday}.csv`,
     },
     {
         name: "tags",
-        url: `https://e621.net/db_export/tags-${yesterday}.csv.gz`,
         csvPath: `csv/tags-${yesterday}.csv`,
     },
 ];
@@ -148,12 +146,18 @@ async function generateTags() {
 
 async function retrieveFiles() {
     try {
+        const exportRes = await fetch("https://e621.net/db_exports.json");
+        if (!exportRes.ok) {
+            throw new Error(`Couldn't fetch URLs. Response status: ${exportRes.status}`);
+        }
+
+        const exportResult = await exportRes.json();
         for (const f of files) {
             console.log(`	Downloading ${f.name}...`);
             if (fs.existsSync(f.csvPath)) {
                 console.log(`	${f.name}.csv already exists, skipping download.`);
             } else {
-                await downloadAndExtract(f.url, f.csvPath);
+                await downloadAndExtract(exportResult, f.name, f.csvPath);
             }
         }
 
@@ -164,15 +168,20 @@ async function retrieveFiles() {
     }
 }
 
-async function downloadAndExtract(url, outputPath) {
+async function downloadAndExtract(exportResult, name, outputPath) {
     const dir = path.dirname(outputPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    
+    const metaObj = exportResult.find((e) => e.name === name);
+    if (!metaObj) {
+        throw new Error("couldn't find metadata info for: " + name);
+    }
 
     return new Promise((resolve, reject) => {
         https
-            .get(url, (response) => {
+            .get(metaObj.url, (response) => {
                 if (response.statusCode !== 200) {
-                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+                    reject(new Error(`Failed to get '${metaObj.url}' (${response.statusCode})`));
                     return;
                 }
 
@@ -281,7 +290,7 @@ function saveTagsAsJson(topTags) {
 
     try {
         fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), "utf-8");
-        fs.writeFileSync(outputMinPath, encode(outputData), "utf-8");
+        fs.writeFileSync(outputMinPath, encode(outputData));
         console.log(`Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
         console.error("Failed to save tags as JSON:", err);
