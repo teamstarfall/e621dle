@@ -15,7 +15,7 @@ export default function Header({ gameMode, setGameMode, currentStreak, bestStrea
     return (
         <header className="flex flex-row justify-between sm:grid sm:grid-cols-[1fr_auto_1fr] bg-[#0f223d] border-b-1 shadow-md sm:shadow-none sm:bg-transparent sm:border-0 items-center w-full sticky top-0 z-10 px-4 py-2 sm:static mt-0 sm:p-0 sm:mt-6">
             <div className="justify-self-start flex flex-col items-center">
-                <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" />
+                <Image src="/logo.png" alt="e621dle logo" width={256} height={81} className="w-20 h-auto sm:w-48" priority />
 
                 <span className="hidden sm:block">
                     <GameModeToggle gameMode={gameMode} setGameMode={setGameMode} />

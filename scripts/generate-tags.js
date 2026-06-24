@@ -7,14 +7,18 @@ import path from "path";
 import { parse } from "csv-parse";
 import { fileURLToPath } from "url";
 import { encode } from "@msgpack/msgpack";
-import { execSync } from "child_process";
+import "dotenv/config";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const pipe = promisify(pipeline);
-const branchName = getBranchName();
-const outputFileName = branchName === "main" ? "tags.json" : "tags.dev.json";
+const environment = getEnvironment();
 const yesterday = getYesterdayDate();
+const outputFileName = environment === "production" ? "tags.json" : "tags.dev.json";
+const outputPath = path.join(__dirname, "../resources", outputFileName);
+const outputMinPath = path.join(__dirname, "../resources", outputFileName.replace(".json", ".min.json"));
+const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
 const files = [
     {
         name: "posts",
@@ -112,22 +116,27 @@ const blacklist = [
 })();
 
 async function generateTags() {
+    const hasR2Creds = R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET_NAME;
+    if (!hasR2Creds) {
+        throw new Error("R2 credentials missing.");
+    }
+
     const tags = new Map();
     var begin;
 
-    console.log("Starting process. Current branch name: ", branchName);
+    console.log("Starting process. Current environment: ", environment);
     console.log("Output file name will be: ", outputFileName);
     console.log("Retrieving files...");
     begin = Date.now();
     await retrieveFiles();
-    console.log(`Retrieved files in ${Date.now() - begin} ms.`);
+    console.log(`   Retrieved files in ${Date.now() - begin} ms.`);
 
     console.log("Parsing tags...");
     begin = Date.now();
     await parseTags(tags);
-    console.log(`Parsed tags in ${Date.now() - begin} ms.`);
+    console.log(`   Parsed tags in ${Date.now() - begin} ms.`);
 
-    console.log("Retrieving top tags by category...");
+    console.log("   Retrieving top tags by category...");
     begin = Date.now();
     const topTags = [
         ...getTopTagsByCategory(tags.values(), 0, 1000),
@@ -136,30 +145,44 @@ async function generateTags() {
         ...getTopTagsByCategory(tags.values(), 4, 1000),
         ...getTopTagsByCategory(tags.values(), 5, 1000),
     ];
-    console.log(`Retrieving top tags in ${Date.now() - begin} ms.`);
+    console.log(`   Retrieving top tags in ${Date.now() - begin} ms.`);
 
     console.log("Parsing posts...");
     begin = Date.now();
     await parsePosts(topTags);
-    console.log(`Parsed posts in ${Date.now() - begin} ms.`);
+    console.log(`   Parsed posts in ${Date.now() - begin} ms.`);
 
+    console.log("Saving to JSON...");
     saveTagsAsJson(topTags);
+
+    console.log("Initializing bucket upload...");
+    const s3 = new S3Client({
+        region: "auto",
+        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+            accessKeyId: R2_ACCESS_KEY_ID,
+            secretAccessKey: R2_SECRET_ACCESS_KEY,
+        },
+    });
+
+    await uploadToR2(s3, outputPath);
+    await uploadToR2(s3, outputMinPath);
 }
 
 async function retrieveFiles() {
     try {
         for (const f of files) {
-            console.log(`	Downloading ${f.name}...`);
+            console.log(`   Downloading ${f.name}...`);
             if (fs.existsSync(f.csvPath)) {
-                console.log(`	${f.name}.csv already exists, skipping download.`);
+                console.log(`   ${f.name}.csv already exists, skipping download.`);
             } else {
                 await downloadAndExtract(f.url, f.csvPath);
             }
         }
 
-        console.log("All files downloaded and extracted ✅");
+        console.log("   All files downloaded and extracted ✅");
     } catch (err) {
-        console.error("Download failed ❌:", err.message);
+        console.error("   Download failed ❌:", err.message);
         process.exit(1);
     }
 }
@@ -211,6 +234,25 @@ async function parseTags(tags) {
             .on("end", () => resolve(tags))
             .on("error", reject);
     });
+}
+
+async function uploadToR2(s3, outputPath) {
+    const content = fs.readFileSync(outputPath);
+    const key = path.relative(path.join(__dirname, ".."), outputPath).replace(/\\/g, "/");
+    const contentType = outputPath.endsWith(".min.json") ? "application/octet-stream" : "application/json";
+
+    let cacheControl = "public, max-age=3600"; // 1 hour for json
+
+    const command = new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: key,
+        Body: content,
+        ContentType: contentType,
+        CacheControl: cacheControl,
+    });
+
+    await s3.send(command);
+    console.log(`   Uploaded ${key} to R2 bucket ${R2_BUCKET_NAME}`);
 }
 
 async function parsePosts(topTags) {
@@ -271,9 +313,6 @@ async function parsePosts(topTags) {
 }
 
 function saveTagsAsJson(topTags) {
-    const outputPath = path.join(__dirname, "../resources", outputFileName);
-    const outputMinPath = path.join(__dirname, "../resources", outputFileName.replace(".json", ".min.json"));
-
     const outputData = {
         date: yesterday,
         tags: topTags,
@@ -282,7 +321,7 @@ function saveTagsAsJson(topTags) {
     try {
         fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), "utf-8");
         fs.writeFileSync(outputMinPath, encode(outputData));
-        console.log(`Saved ${topTags.length} tags to ${outputPath}`);
+        console.log(`   Saved ${topTags.length} tags to ${outputPath}`);
     } catch (err) {
         console.error("Failed to save tags as JSON:", err);
     }
@@ -316,13 +355,13 @@ function shouldProcessPost(line) {
     );
 }
 
-function getBranchName() {
-    try {
-        const branchName = execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
-        return branchName;
-    } catch (error) {
-        console.error("Error getting branch name:", error);
-        return "unknown";
+function getEnvironment() {
+    if (process.env.VERCEL_ENV === "production") {
+        return "production";
+    } else if (process.env.VERCEL_ENV === "preview") {
+        return "preview";
+    } else {
+        return "local";
     }
 }
 

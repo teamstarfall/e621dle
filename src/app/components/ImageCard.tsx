@@ -24,6 +24,7 @@ const ImageCard = memo(function ImageCard({ currentSrc, tagName, ratingLevel, ha
                     alt={tagName}
                     unoptimized
                     fill
+                    priority
                     className="object-contain rounded-md"
                     onError={handleError}
                 />

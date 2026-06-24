@@ -1,13 +1,12 @@
 import "server-only";
 
 import { DailyChallenge, Tag, TagResponse } from "./interfaces";
-import path from "node:path";
-import fs, { writeFile } from "node:fs/promises";
 import { RedisClientType, createClient } from "redis";
 import { mulberry32, xmur3 } from "./utils/rng";
 import { MAX_POST_DIFFERENCE_DAILY, MAX_ROUNDS } from "./constants";
 import { decode } from "@msgpack/msgpack";
 import { getEnvironment } from "./utils/utils";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 let redisClient: RedisClientType;
 
@@ -32,39 +31,58 @@ function getCurrentUtcDate() {
 }
 
 export async function fetchTags() {
-    if (currentEnvironment === "local") {
-        const filePath = path.join(process.cwd(), "resources", "tags.dev.json");
+    const tagName = currentEnvironment === "production" ? "tags" : "tags.dev";
+
+    const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
+
+    const bucketUrl =
+        process.env.NEXT_PUBLIC_DATA_BUCKET_URL ||
+        process.env.DATA_BUCKET_URL ||
+        (R2_BUCKET_NAME ? `https://${R2_BUCKET_NAME}.starfall.team` : undefined);
+    if (bucketUrl) {
         try {
-            const fileContents = await fs.readFile(filePath, "utf8");
-            return JSON.parse(fileContents);
-        } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-
-            console.log("Local tags.json not found, fetching from remote...");
-            const response = await fetch(
-                "https://raw.githubusercontent.com/teamstarfall/e621dle/refs/heads/data/resources/tags.dev.json",
-                { cache: "no-store" }
-            );
-            if (!response.ok) {
-                throw new Error(`Failed to fetch tags.dev.json from fallback URL`);
+            const url = `${bucketUrl}/resources/${tagName}.min.json`;
+            console.log("Loading data from: " + url);
+            const response = await fetch(url, { cache: "no-store" });
+            if (response.ok) {
+                const minifiedJson = await response.arrayBuffer();
+                return decode(new Uint8Array(minifiedJson)) as TagResponse;
             }
-
-            const data = await response.json();
-            await writeFile(filePath, JSON.stringify(data, null, 2));
-            return data;
+            console.warn(`Failed to fetch from bucket URL: ${url}`);
+        } catch (fetchError) {
+            console.warn(`Error fetching from bucket URL:`, fetchError);
         }
     }
 
-    const tagName = currentEnvironment === "production" ? "tags" : "tags.dev";
-    const url = `https://raw.githubusercontent.com/teamstarfall/e621dle/data/resources/${tagName}.min.json`;
+    if (R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET_NAME) {
+        try {
+            const s3 = new S3Client({
+                region: "auto",
+                endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+                credentials: {
+                    accessKeyId: R2_ACCESS_KEY_ID,
+                    secretAccessKey: R2_SECRET_ACCESS_KEY,
+                },
+            });
 
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch tags.json from ${url}`);
+            const command = new GetObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: `resources/${tagName}.min.json`,
+            });
+
+            const s3Response = await s3.send(command);
+            if (s3Response.Body) {
+                const bodyContents = await s3Response.Body.transformToByteArray();
+                return decode(new Uint8Array(bodyContents)) as TagResponse;
+            }
+        } catch (s3Error) {
+            console.error("Failed to fetch tags from R2 bucket via S3 client:", s3Error);
+        }
     }
 
-    const minifiedJson = await response.arrayBuffer();
-    return decode(new Uint8Array(minifiedJson)) as TagResponse;
+    throw new Error(
+        `Failed to fetch tags.json for environment '${currentEnvironment}'. Please check that your bucket URL or R2 credentials are set.`
+    );
 }
 
 export async function fetchDaily() {
