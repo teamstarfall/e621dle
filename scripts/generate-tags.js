@@ -356,7 +356,9 @@ function shouldProcessPost(line) {
 }
 
 function getEnvironment() {
-    if (process.env.VERCEL_ENV === "production") {
+    if (process.env.GITHUB_ACTIONS === "true") {
+        return "production";
+    } else if (process.env.VERCEL_ENV === "production") {
         return "production";
     } else if (process.env.VERCEL_ENV === "preview") {
         return "preview";
