@@ -347,7 +347,9 @@ function getYesterdayDate() {
 
 function shouldProcessPost(line) {
     return (
-        line.length !== 29 ||
+        // Current e621 post exports have 32 columns; older exports used a smaller layout.
+        // Reject only malformed rows, not valid rows with the modern schema.
+        line.length < 24 ||
         !isNumber(line[0]) ||
         line[20] === "t" || // post is deleted
         !["png", "jpg", "gif"].includes(line[11]) ||
